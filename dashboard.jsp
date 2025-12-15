@@ -340,4 +340,5 @@ prefix="spring" %>
             </div>
         </div>
     </div>
+    /test/
 <script src="/sample-system/js/modules/dashboard.js"></script>
