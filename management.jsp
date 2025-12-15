@@ -170,7 +170,7 @@ prefix="spring" %>
     </div>
 </div>
 
-<div class="ppap-section mb-0" id="projectListSection" style="height: 60vh;">
+<div class="ppap-section mb-0 flex-fill" id="projectListSection">
     <div class="section-header d-flex justify-content-between">
         <div class="component-title">
             <span><i class="bi bi-list-ul"></i></span>

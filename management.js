@@ -749,7 +749,7 @@ async function handleAddCustomTask() {
             console.warn('Failed to reset custom task form', e);
         }
         
-        // Reload project list để đồng bộ dữ liệu
+        // Reload project list to sync data and refresh table
         try { 
             await loadProjectList(); 
         } catch (e) { 
@@ -985,10 +985,14 @@ async function ensureProjectPersisted(project) {
         return pid;
     }
 
+    // Show loading indicator during persistence
+    try { loader.load(); } catch (e) { /* loader may not be available */ }
+
     try {
         const created = await createProject(project.customer, project.name);
         if (created && created.id && !String(created.id).startsWith('TEMP-')) {
             project.id = created.id;
+            try { loader.unload(); } catch (e) { }
             return project.id;
         }
     } catch (e) {
@@ -1000,7 +1004,10 @@ async function ensureProjectPersisted(project) {
         if (project.name) params.append('projectName', project.name);
         if (project.customer) params.append('customerId', mapCustomerToId(project.customer));
 
-        for (let attempt = 0; attempt < 5; attempt++) {
+        const maxAttempts = 3; // Reduced from 5 for faster feedback
+        const delayMs = 300;   // Reduced from 500ms
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
             try {
                 const res = await fetch('/sample-system/api/projects' + (params.toString() ? ('?' + params.toString()) : ''));
                 if (res.ok) {
@@ -1010,19 +1017,23 @@ async function ensureProjectPersisted(project) {
                         const found = list.find(p => String(p.name) === String(project.name) && (String(p.customerId || p.customer || '') === String(mapCustomerToId(project.customer))));
                         if (found && found.id && !String(found.id).startsWith('TEMP-')) {
                             project.id = found.id;
+                            try { loader.unload(); } catch (e) { }
                             return project.id;
                         }
                     }
                 }
             } catch (e) {
-                console.warn('ensureProjectPersisted: query attempt failed', e);
+                console.warn(`ensureProjectPersisted: query attempt ${attempt + 1}/${maxAttempts} failed`, e);
             }
-            await new Promise(r => setTimeout(r, 500));
+            if (attempt < maxAttempts - 1) {
+                await new Promise(r => setTimeout(r, delayMs));
+            }
         }
     } catch (e) {
         console.warn('ensureProjectPersisted: fallback search failed', e);
     }
 
+    try { loader.unload(); } catch (e) { }
     return null;
 }
 
@@ -1031,6 +1042,7 @@ let projectList = [];
 let selectedPPAPItems = [];
 let createModalOriginalTitleHTML = null;
 let currentTaskDetailObj = null;
+let draggedTaskRow = null;
 
 function rangePicker($input, fromDate, toDate) {
     let start = null;
@@ -1276,12 +1288,28 @@ function clearAdvancedFilters() {
     }
 }
 
+// Helper function to normalize status for consistent comparison
+function normalizeStatus(status) {
+    if (!status) return '';
+    return String(status).toUpperCase().replace(/[_-]/g, '_');
+}
+
+// Check if a status represents "waiting for approval"
+function isWaitingStatus(status) {
+    const normalized = normalizeStatus(status);
+    return normalized === 'WAITING' ||
+           normalized === 'WAITING_FOR_APPROVAL' ||
+           (normalized.includes('WAIT') && normalized.includes('APPROVAL'));
+}
+
 function renderProjectListUI() {
     const waitingBody = getEl('waitingApprovalBody') || (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) || null;
     const otherBody = getEl('otherProjectsBody') || (getEl('otherProjectsSection') && getEl('otherProjectsSection').querySelector('tbody')) || null;
 
-    const waitingProjects = projectList.filter(p => p.status === 'waiting');
-    const otherProjects = projectList.slice();
+    // Use normalized status comparison
+    const waitingProjects = projectList.filter(p => isWaitingStatus(p.status));
+    // Exclude waiting projects from other projects list (fix issue #9)
+    const otherProjects = projectList.filter(p => !isWaitingStatus(p.status));
 
     if (waitingBody) {
         if (waitingProjects.length === 0) {
@@ -1466,6 +1494,28 @@ function updateProjectOrder(section) {
         tr.dataset.projectId
     );
 
+    // Reorder projectList based on the new DOM order
+    const projectMap = {};
+    projectList.forEach(p => { if (p && p.id) projectMap[String(p.id)] = p; });
+
+    // Get projects for this section
+    const sectionProjects = section === 'waiting'
+        ? projectList.filter(p => isWaitingStatus(p.status))
+        : projectList.filter(p => !isWaitingStatus(p.status));
+
+    // Reorder section projects based on newOrder
+    const reorderedSection = newOrder.map(id => projectMap[String(id)]).filter(Boolean);
+
+    // Rebuild projectList maintaining both sections
+    if (section === 'waiting') {
+        const otherProjects = projectList.filter(p => !isWaitingStatus(p.status));
+        projectList = [...reorderedSection, ...otherProjects];
+    } else {
+        const waitingProjects = projectList.filter(p => isWaitingStatus(p.status));
+        projectList = [...waitingProjects, ...reorderedSection];
+    }
+
+    console.log('Project order updated for section:', section, 'New order:', newOrder);
 }
 
 
@@ -1597,8 +1647,8 @@ async function showProjectTasksModal(projectId) {
         const modalEl = document.getElementById('projectTasksModal');
         if (modalEl) {
             const footer = modalEl.querySelector('.modal-footer');
-            const statusVal = project && project.status ? String(project.status).toUpperCase() : '';
-            const waiting = (statusVal === 'WAITING_FOR_APPROVAL' || statusVal === 'WAITING' || statusVal.indexOf('WAIT') !== -1 && statusVal.indexOf('APPROVAL') !== -1);
+            // Use normalized status comparison (consistent with renderProjectListUI)
+            const waiting = project ? isWaitingStatus(project.status) : false;
 
             const saveBtn = footer ? footer.querySelector("button[onclick='saveProjectTaskQuantity()']") : null;
             const submitBtn = footer ? footer.querySelector("button[onclick='projectTasksSubmit()']") : null;
@@ -3149,7 +3199,14 @@ function confirmPPAPSelection() {
         return;
     }
 
-    selectedPPAPItems = checked.map(cb => {
+    // Build a map of existing tasks to preserve them
+    const existingTaskMap = {};
+    (selectedPPAPItems || []).forEach(task => {
+        if (task && task.id) existingTaskMap[String(task.id)] = task;
+    });
+
+    // Get newly checked items from the modal
+    const newSelections = checked.map(cb => {
         const card = cb.closest('.ppap-task-card');
         const info = card ? card.querySelector('.ppap-task-info') : null;
         const nameEl = info ? info.querySelector('.ppap-task-name') : null;
@@ -3167,7 +3224,20 @@ function confirmPPAPSelection() {
         };
     });
 
-    showAlertSuccess('Success', `Selected ${selectedPPAPItems.length} PPAP items`);
+    // Merge: add new selections to existing map (preserves existing tasks)
+    newSelections.forEach(task => {
+        existingTaskMap[String(task.id)] = task;
+    });
+
+    // Convert map back to array
+    selectedPPAPItems = Object.values(existingTaskMap);
+
+    // Recalculate step numbers
+    selectedPPAPItems.forEach((task, idx) => {
+        if (task) task.step = idx + 1;
+    });
+
+    showAlertSuccess('Success', `Total ${selectedPPAPItems.length} tasks selected`);
 
     renderSelectedTasksInModal();
 
@@ -3577,6 +3647,9 @@ function filterProjectTasksByName(query) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
+    // Show loader immediately on page load
+    try { loader.load(); } catch (e) { /* loader may not be initialized yet */ }
+
     const btn = document.getElementById('upload');
     if (btn) {
         btn.addEventListener('click', handleTaskFileUpload);
@@ -3639,6 +3712,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     await loadAllSelects();
     await loadUsersAndInitDriSelects();
     await loadProjectList();
+
+    // Hide loader after all initial data is loaded
+    try { loader.unload(); } catch (e) { }
 
     try { initDeadlinePicker(); } catch (e) { }
 

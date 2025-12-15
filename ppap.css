@@ -1,4 +1,5 @@
 :root {
+    --navbar-height: 70px;
     --alert:#303866;
     --primary-bg: #0a0e27;
     --secondary-bg: #12172e;
@@ -21,20 +22,24 @@
     box-sizing: border-box;
 }
 
-.component-wrapper.fit{
+.component-wrapper.fit {
     height: calc(100vh - var(--navbar-height));
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    padding: 0 1.25rem;
+    box-sizing: border-box;
 }
 
 .table-box {
-    height: 45vh;
+    flex: 1 1 0;
+    min-height: 0;
     overflow-y: auto;
 }
 
 .table-box.plus {
-    height: 50vh;
+    flex: 1 1 0;
+    min-height: 0;
     overflow-y: auto;
 }
 
@@ -534,6 +539,15 @@ body {
     border-radius: 0.75rem;
     padding: 1.5625rem;
     margin-bottom: 1.5625rem;
+    flex-shrink: 0;
+}
+
+.ppap-section.flex-fill {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .section-header {

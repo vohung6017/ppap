@@ -73,7 +73,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section mb-0" style="height: 53vh;">
+    <div class="ppap-section mb-0 flex-fill">
         <div class="component-title mb-3"><i class="bi bi-file-earmark"></i> Documents List</div>
         <div class="table-responsive table-box">
             <table class="table" id="document-list">
