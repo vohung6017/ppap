@@ -7,14 +7,18 @@ const DateFormatter = {
         const str = String(dateStr).trim();
 
         if (window.moment) {
-            const m = window.moment(str, [
-                'YYYY/MM/DD',
-                'YYYY-MM-DD',
-                'YYYY/MM/DD HH:mm',
-                'YYYY-MM-DD HH:mm',
-                'YYYY/MM/DD HH:mm:ss',
-                'YYYY-MM-DD HH:mm:ss'
-            ], true);
+            const m = window.moment(
+                str,
+                [
+                    'YYYY/MM/DD',
+                    'YYYY-MM-DD',
+                    'YYYY/MM/DD HH:mm',
+                    'YYYY-MM-DD HH:mm',
+                    'YYYY/MM/DD HH:mm:ss',
+                    'YYYY-MM-DD HH:mm:ss',
+                ],
+                true
+            );
 
             if (m && typeof m.isValid === 'function' && m.isValid()) {
                 return m.format('YYYY/MM/DD HH:mm:ss');
@@ -41,7 +45,7 @@ const DateFormatter = {
 
     toDisplayFormat(dateStr) {
         return this.toAPIFormat(dateStr) || '-';
-    }
+    },
 };
 
 function escapeHtml(input) {
@@ -74,16 +78,14 @@ function filterUsers(keyword) {
     if (!keyword || keyword.length === 0) {
         return USERS_CACHE;
     }
-    
+
     const lowerKeyword = keyword.toLowerCase();
-    return USERS_CACHE.filter(user => {
+    return USERS_CACHE.filter((user) => {
         const idCard = (user.idCard || '').toLowerCase();
         const fullName = (user.fullName || '').toLowerCase();
         const displayName = (user.displayName || '').toLowerCase();
-        
-        return idCard.includes(lowerKeyword) ||
-               fullName.includes(lowerKeyword) ||
-               displayName.includes(lowerKeyword);
+
+        return idCard.includes(lowerKeyword) || fullName.includes(lowerKeyword) || displayName.includes(lowerKeyword);
     });
 }
 
@@ -98,27 +100,27 @@ function formatUserLabel(user) {
 function getUserLabelById(idCard) {
     if (!idCard) return '';
     const normalized = String(idCard).trim();
-    const found = USERS_CACHE.find(user => (user.idCard || '').toString() === normalized);
+    const found = USERS_CACHE.find((user) => (user.idCard || '').toString() === normalized);
     if (found) return formatUserLabel(found);
     return normalized;
 }
 
 function getStatusBadgeClass(status) {
     const statusMap = {
-        'PENDING': 'status-pending',
-        'IN_PROCESS': 'status-in-progress',
-        'COMPLETED': 'status-completed',
-        'OVER_DUE': 'status-overdue'
+        PENDING: 'status-pending',
+        IN_PROCESS: 'status-in-progress',
+        COMPLETED: 'status-completed',
+        OVER_DUE: 'status-overdue',
     };
     return statusMap[status] || 'status-pending';
 }
 
 function getStatusLabel(status) {
     const labelMap = {
-        'PENDING': 'Pending',
-        'IN_PROCESS': 'In Progress',
-        'COMPLETED': 'Completed',
-        'OVER_DUE': 'Overdue'
+        PENDING: 'Pending',
+        IN_PROCESS: 'In Progress',
+        COMPLETED: 'Completed',
+        OVER_DUE: 'Overdue',
     };
     return labelMap[status] || status;
 }
@@ -136,10 +138,10 @@ function getPriorityLabel(priority) {
 
 function populateDriSelectOptions(selectEl, selectedValue) {
     if (!selectEl) return;
-    
+
     selectEl.innerHTML = '<option value="">-- Select DRI --</option>';
-    
-    USERS_CACHE.forEach(user => {
+
+    USERS_CACHE.forEach((user) => {
         const idCard = user.idCard || '';
         const fullName = user.fullName || '';
         const displayName = user.displayName || '';
@@ -158,7 +160,7 @@ function initDriSelect2(selectEl, dropdownParent) {
         console.warn('initDriSelect2: jQuery or select2 not available');
         return;
     }
-    
+
     // If the element is an INPUT, convert it to SELECT
     let targetEl = selectEl;
     if (selectEl.tagName === 'INPUT') {
@@ -167,18 +169,18 @@ function initDriSelect2(selectEl, dropdownParent) {
         newSelect.id = selectEl.id;
         newSelect.className = selectEl.className;
         newSelect.name = selectEl.name || selectEl.id;
-        
+
         // Copy relevant attributes
         if (selectEl.dataset) {
-            Object.keys(selectEl.dataset).forEach(key => {
+            Object.keys(selectEl.dataset).forEach((key) => {
                 newSelect.dataset[key] = selectEl.dataset[key];
             });
         }
-        
+
         // Replace input with select
         selectEl.parentNode.replaceChild(newSelect, selectEl);
         targetEl = newSelect;
-        
+
         // Populate options
         populateDriSelectOptions(targetEl, currentVal);
     } else {
@@ -186,28 +188,30 @@ function initDriSelect2(selectEl, dropdownParent) {
         const currentVal = selectEl.value || '';
         populateDriSelectOptions(targetEl, currentVal);
     }
-    
+
     const $select = $(targetEl);
-    
+
     // Destroy existing select2 if any
     if ($select.data('select2')) {
-        try { $select.select2('destroy'); } catch (e) { }
+        try {
+            $select.select2('destroy');
+        } catch (e) {}
     }
-    
+
     // Initialize select2 with search
     const config = {
         placeholder: 'Search user...',
         allowClear: true,
-        width: '100%'
+        width: '100%',
     };
-    
+
     // Set dropdownParent to modal if provided (fixes dropdown appearing behind modal)
     if (dropdownParent) {
         config.dropdownParent = $(dropdownParent);
     }
-    
+
     $select.select2(config);
-    
+
     // Restore value after select2 init
     const savedVal = targetEl.value || (selectEl !== targetEl ? selectEl.value : '') || '';
     if (savedVal) {
@@ -219,7 +223,7 @@ async function loadUsersAndInitDriSelects() {
     if (USERS_CACHE.length === 0) {
         USERS_CACHE = await fetchUsers();
     }
-    
+
     // Init filter-created-by in main page (không cần dropdownParent)
     const filterCreatedBy = document.getElementById('filter-created-by');
     if (filterCreatedBy) {
@@ -259,7 +263,7 @@ function safeCompareIds(id1, id2) {
 
 function findProjectById(projectId) {
     if (!projectId) return null;
-    return projectList.find(p => safeCompareIds(p.id, projectId)) || null;
+    return projectList.find((p) => safeCompareIds(p.id, projectId)) || null;
 }
 
 const Validators = {
@@ -276,7 +280,7 @@ const Validators = {
             throw new Error(`${fieldName} must be less than ${max} characters`);
         }
         return value;
-    }
+    },
 };
 
 function openModal(modalId) {
@@ -303,22 +307,34 @@ function safeHideModal(modalEl) {
             if (inst && typeof inst.hide === 'function') {
                 inst.hide();
             } else {
-                try { new bootstrap.Modal(modalEl).hide(); } catch (e) { modalEl.classList.remove('show', 'active'); }
+                try {
+                    new bootstrap.Modal(modalEl).hide();
+                } catch (e) {
+                    modalEl.classList.remove('show', 'active');
+                }
             }
         } else {
             modalEl.classList.remove('show', 'active');
         }
     } catch (e) {
-        try { modalEl.classList.remove('show', 'active'); } catch (e2) { }
+        try {
+            modalEl.classList.remove('show', 'active');
+        } catch (e2) {}
     }
 
     try {
         const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(b => { if (b && b.parentNode) b.parentNode.removeChild(b); });
-    } catch (e) { }
+        backdrops.forEach((b) => {
+            if (b && b.parentNode) b.parentNode.removeChild(b);
+        });
+    } catch (e) {}
 
-    try { document.body.classList.remove('modal-open'); } catch (e) { }
-    try { document.body.style.paddingRight = ''; } catch (e) { }
+    try {
+        document.body.classList.remove('modal-open');
+    } catch (e) {}
+    try {
+        document.body.style.paddingRight = '';
+    } catch (e) {}
 }
 
 function cleanUpModal() {
@@ -326,20 +342,36 @@ function cleanUpModal() {
         const anyOpen = document.querySelectorAll('.modal.show').length > 0;
         if (!anyOpen) {
             const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(b => { try { b.remove(); } catch (e) { /* ignore */ } });
-            try { document.body.classList.remove('modal-open'); } catch (e) { }
-            try { document.body.style.paddingRight = ''; } catch (e) { }
+            backdrops.forEach((b) => {
+                try {
+                    b.remove();
+                } catch (e) {
+                    /* ignore */
+                }
+            });
+            try {
+                document.body.classList.remove('modal-open');
+            } catch (e) {}
+            try {
+                document.body.style.paddingRight = '';
+            } catch (e) {}
         } else {
             try {
                 const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
                 const openCount = document.querySelectorAll('.modal.show').length;
                 if (backdrops.length > openCount) {
                     const extras = backdrops.slice(0, backdrops.length - openCount);
-                    extras.forEach(b => { try { b.remove(); } catch (e) { } });
+                    extras.forEach((b) => {
+                        try {
+                            b.remove();
+                        } catch (e) {}
+                    });
                 }
-            } catch (e) { }
+            } catch (e) {}
         }
-    } catch (e) { /* swallow */ }
+    } catch (e) {
+        /* swallow */
+    }
 }
 
 document.addEventListener('hidden.bs.modal', function (ev) {
@@ -352,9 +384,9 @@ function showAlertSuccess(title, text) {
     Swal.fire({
         title: title,
         text: text,
-        icon: "success",
-        customClass: "swal-success",
-        buttonsStyling: true
+        icon: 'success',
+        customClass: 'swal-success',
+        buttonsStyling: true,
     });
 }
 
@@ -362,9 +394,9 @@ function showAlertError(title, text) {
     Swal.fire({
         title: title,
         text: text,
-        icon: "error",
-        customClass: "swal-error",
-        buttonsStyling: true
+        icon: 'error',
+        customClass: 'swal-error',
+        buttonsStyling: true,
     });
 }
 
@@ -372,9 +404,9 @@ function showAlertWarning(title, text) {
     Swal.fire({
         title: title,
         text: text,
-        icon: "warning",
-        customClass: "swal-warning",
-        buttonsStyling: true
+        icon: 'warning',
+        customClass: 'swal-warning',
+        buttonsStyling: true,
     });
 }
 
@@ -410,22 +442,22 @@ async function handleTaskFileUpload() {
         try {
             const res = await fetch('/sample-system/api/tasks/upload-files', {
                 method: 'POST',
-                body: formData
+                body: formData,
             });
 
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
                 Swal.fire({
-                    title: "Failed",
-                    text: "Upload thất bại: " + res.status + " " + text,
-                    icon: "error",
-                    background: "var(--alert)",
-                    color: "white",
-                    confirmButtonColor: "#3949ab",
-                    confirmButtonText: "OK",
+                    title: 'Failed',
+                    text: 'Upload thất bại: ' + res.status + ' ' + text,
+                    icon: 'error',
+                    background: 'var(--alert)',
+                    color: 'white',
+                    confirmButtonColor: '#3949ab',
+                    confirmButtonText: 'OK',
                     customClass: {
-                        confirmButton: "text-white"
-                    }
+                        confirmButton: 'text-white',
+                    },
                 });
                 return;
             }
@@ -439,8 +471,7 @@ async function handleTaskFileUpload() {
             } catch (e) {
                 console.warn('Failed to refresh attachments after upload', e);
             }
-        } catch (e) {
-        }
+        } catch (e) {}
     };
 
     fileInput.click();
@@ -468,8 +499,8 @@ async function handleTaskComment() {
 
         const res = await fetch(`/sample-system/api/tasks/${taskId}/comment`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString()
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: params.toString(),
         });
 
         if (!res.ok) {
@@ -479,7 +510,9 @@ async function handleTaskComment() {
         }
 
         let json = null;
-        try { json = await res.json(); } catch (e) { }
+        try {
+            json = await res.json();
+        } catch (e) {}
 
         showAlertSuccess('Success', 'Comment đã gửi');
         if (input) input.value = '';
@@ -510,24 +543,29 @@ async function getComments(id) {
         }
 
         let json = null;
-        try { json = await res.json(); } catch (e) { json = null; }
-        const items = (json && Array.isArray(json.data)) ? json.data : [];
+        try {
+            json = await res.json();
+        } catch (e) {
+            json = null;
+        }
+        const items = json && Array.isArray(json.data) ? json.data : [];
 
         if (!items || items.length === 0) {
             container.innerHTML = '<div class="comment-empty">No comments</div>';
             return;
         }
 
-        const html = items.map(it => {
-            const author = it.createdBy || it.author || '-';
-            const date = it.createdAt || it.createAt || it.date || '-';
-            const content = it.content || it.cnContent || it.vnContent || '';
+        const html = items
+            .map((it) => {
+                const author = it.createdBy || it.author || '-';
+                const date = it.createdAt || it.createAt || it.date || '-';
+                const content = it.content || it.cnContent || it.vnContent || '';
 
-            const safeAuthor = String(author);
-            const safeDate = String(date);
-            const safeContent = String(content);
+                const safeAuthor = String(author);
+                const safeDate = String(date);
+                const safeContent = String(content);
 
-            return `
+                return `
                 <div class="comment-item">
                     <div class="comment-header">
                         <div class="comment-avatar"><i class="bi bi-person"></i></div>
@@ -538,12 +576,11 @@ async function getComments(id) {
                     </div>
                     <div class="comment-text">${escapeHtml(safeContent)}</div>
                 </div>`;
-        }).join('');
+            })
+            .join('');
 
         container.innerHTML = html;
-
-    }
-    catch (error) {
+    } catch (error) {
         console.error('Lỗi khi lấy comments: ' + (error && error.message ? error.message : error));
     }
 }
@@ -581,11 +618,11 @@ async function handleAddCustomTask() {
 
         // Đảm bảo có projectId hợp lệ
         let projectId = null;
-        
+
         // Ưu tiên lấy từ currentProject nếu đang trong flow tạo mới
         if (currentProject && currentProject.id) {
             projectId = currentProject.id;
-            
+
             // Nếu là TEMP ID, persist project trước
             if (String(projectId).startsWith('TEMP-')) {
                 const persistedId = await ensureProjectPersisted(currentProject);
@@ -631,24 +668,24 @@ async function handleAddCustomTask() {
             step: null,
             flag: true,
             status: null,
-            stageId: typeId
+            stageId: typeId,
         };
 
         console.log('Creating custom task with payload:', payload);
 
         const res = await fetch('/sample-system/api/tasks/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload),
         });
-        
+
         if (!res.ok) {
             const text = await res.text().catch(() => '');
             console.error('Create task failed:', res.status, text);
             showAlertError('Failed', `Tạo task thất bại: ${res.status} - ${text}`);
             return;
         }
-        
+
         // Parse response và lấy task mới được tạo
         let newTask = null;
         try {
@@ -657,19 +694,19 @@ async function handleAddCustomTask() {
         } catch (e) {
             console.warn('Failed to parse create task response', e);
         }
-        
+
         showAlertSuccess('Success', 'Tạo task thành công!');
-        
+
         // Đóng modal custom task
-        try { 
-            bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide(); 
-        } catch (e) { 
+        try {
+            bootstrap.Modal.getInstance(document.getElementById('customTaskModal')).hide();
+        } catch (e) {
             const customModal = document.getElementById('customTaskModal');
             if (customModal) {
                 customModal.classList.remove('show', 'active');
             }
         }
-        
+
         // Thêm task mới vào danh sách và cập nhật UI
         if (newTask && newTask.id) {
             const taskToAdd = {
@@ -685,24 +722,24 @@ async function handleAddCustomTask() {
                 processId: newTask.processId || processId,
                 departmentId: newTask.departmentId || departmentId,
                 stageId: newTask.stageId || typeId,
-                step: 0
+                step: 0,
             };
-            
+
             // Thêm vào selectedPPAPItems
             selectedPPAPItems.push(taskToAdd);
-            
+
             // Tìm và cập nhật project trong projectList
             const project = findProjectById(projectId);
             if (project) {
                 project.tasks = project.tasks || [];
                 project.tasks.push(taskToAdd);
                 project.taskCount = project.tasks.length;
-                
+
                 // Cập nhật lại step cho tất cả tasks
                 project.tasks.forEach((t, idx) => {
                     if (t) t.step = idx + 1;
                 });
-                
+
                 // Kiểm tra xem projectTasksModal có đang mở không
                 const projectModal = document.getElementById('projectTasksModal');
                 if (projectModal && projectModal.classList.contains('show')) {
@@ -710,19 +747,19 @@ async function handleAddCustomTask() {
                     renderProjectTasksContent(project.tasks, projectId);
                 }
             }
-            
+
             // Cập nhật currentProject nếu trùng khớp
             if (currentProject && String(currentProject.id) === String(projectId)) {
                 currentProject.tasks = currentProject.tasks || [];
                 currentProject.tasks.push(taskToAdd);
                 currentProject.taskCount = currentProject.tasks.length;
-                
+
                 // Cập nhật step
                 currentProject.tasks.forEach((t, idx) => {
                     if (t) t.step = idx + 1;
                 });
             }
-            
+
             // Render lại modal create project nếu đang mở
             try {
                 const createModal = document.getElementById('createProjectModal');
@@ -733,7 +770,7 @@ async function handleAddCustomTask() {
                 console.warn('Failed to render in create modal', e);
             }
         }
-        
+
         // Reset form
         try {
             document.getElementById('custom-task-name').value = '';
@@ -748,30 +785,28 @@ async function handleAddCustomTask() {
         } catch (e) {
             console.warn('Failed to reset custom task form', e);
         }
-        
-        // Reload project list to sync data and refresh table
-        try { 
-            await loadProjectList(); 
-        } catch (e) { 
+
+        // Reload project list để đồng bộ dữ liệu
+        try {
+            await loadProjectList();
+        } catch (e) {
             console.warn('Failed to reload project list', e);
         }
-        
     } catch (e) {
         console.error('handleAddCustomTask error:', e);
         showAlertError('Error', e.message || 'Đã xảy ra lỗi khi tạo task');
     }
 }
 
-
 const SELECT_CONFIGS = [
-    { id: 'ppapFilterStatus', endpoint: '/api/tasks/status' },
-    { id: 'ppapFilterPriority', endpoint: '/api/tasks/priorities' },
-    { id: 'ppapFilterCustomer', endpoint: '/api/customers' },
-    { id: 'ppapFilterModel', endpoint: '/api/models' },
-    { id: 'ppapFilterStage', endpoint: '/api/stages' },
-    { id: 'ppapFilterDepartment', endpoint: '/api/departments' },
-    { id: 'ppapFilterProcess', endpoint: '/api/processes' },
-    { id: 'ppapFilterProjectStatus', endpoint: '/api/projects/status' }
+    {id: 'ppapFilterStatus', endpoint: '/api/tasks/status'},
+    {id: 'ppapFilterPriority', endpoint: '/api/tasks/priorities'},
+    {id: 'ppapFilterCustomer', endpoint: '/api/customers'},
+    {id: 'ppapFilterModel', endpoint: '/api/models'},
+    {id: 'ppapFilterStage', endpoint: '/api/stages'},
+    {id: 'ppapFilterDepartment', endpoint: '/api/departments'},
+    {id: 'ppapFilterProcess', endpoint: '/api/processes'},
+    {id: 'ppapFilterProjectStatus', endpoint: '/api/projects/status'},
 ];
 
 const SELECT_CACHE = {};
@@ -797,22 +832,22 @@ function renderOptions(selectId, items) {
     let optionsHtml = '';
     // prepend empty option
     optionsHtml += `<option value="">--Select--</option>`;
-    optionsHtml += items.map(item => {
-        if (typeof item === 'string' || typeof item === 'number') {
-            return `<option value="${item}">${item}</option>`;
-        } else if (item && typeof item === 'object' && item.id && item.name) {
-            return `<option value="${item.id}">${item.name}</option>`;
-        }
-        return '';
-    }).join('');
+    optionsHtml += items
+        .map((item) => {
+            if (typeof item === 'string' || typeof item === 'number') {
+                return `<option value="${item}">${item}</option>`;
+            } else if (item && typeof item === 'object' && item.id && item.name) {
+                return `<option value="${item.id}">${item.name}</option>`;
+            }
+            return '';
+        })
+        .join('');
 
     select.innerHTML = optionsHtml;
 }
 
 async function loadAllSelects() {
-    const results = await Promise.all(
-        SELECT_CONFIGS.map(cfg => fetchOptions(cfg.endpoint))
-    );
+    const results = await Promise.all(SELECT_CONFIGS.map((cfg) => fetchOptions(cfg.endpoint)));
 
     SELECT_CONFIGS.forEach((cfg, idx) => {
         const items = results[idx] || [];
@@ -821,7 +856,9 @@ async function loadAllSelects() {
     });
 
     try {
-        const stageCfgIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/stages' || c.id === 'ppapFilterStage');
+        const stageCfgIndex = SELECT_CONFIGS.findIndex(
+            (c) => c.endpoint === '/api/stages' || c.id === 'ppapFilterStage'
+        );
         if (stageCfgIndex !== -1) {
             const stages = results[stageCfgIndex] || [];
             renderOptions('sl-xvt', stages);
@@ -836,9 +873,12 @@ async function loadAllSelects() {
     }
 
     try {
-        const statusIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/status' || c.id === 'ppapFilterStatus');
-        const priorityIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/tasks/priorities' || c.id === 'ppapFilterPriority');
-
+        const statusIndex = SELECT_CONFIGS.findIndex(
+            (c) => c.endpoint === '/api/tasks/status' || c.id === 'ppapFilterStatus'
+        );
+        const priorityIndex = SELECT_CONFIGS.findIndex(
+            (c) => c.endpoint === '/api/tasks/priorities' || c.id === 'ppapFilterPriority'
+        );
 
         if (statusIndex !== -1) {
             const statuses = results[statusIndex] || [];
@@ -852,7 +892,9 @@ async function loadAllSelects() {
 
         // project status list
         try {
-            const projStatusIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/projects/status' || c.id === 'ppapFilterProjectStatus');
+            const projStatusIndex = SELECT_CONFIGS.findIndex(
+                (c) => c.endpoint === '/api/projects/status' || c.id === 'ppapFilterProjectStatus'
+            );
             if (projStatusIndex !== -1) {
                 const projStatuses = results[projStatusIndex] || [];
                 renderOptions('ppapFilterProjectStatus', projStatuses);
@@ -877,7 +919,9 @@ async function loadAllSelects() {
         }
 
         try {
-            const processIndex = SELECT_CONFIGS.findIndex(c => c.endpoint === '/api/processes' || c.id === 'ppapFilterProcess');
+            const processIndex = SELECT_CONFIGS.findIndex(
+                (c) => c.endpoint === '/api/processes' || c.id === 'ppapFilterProcess'
+            );
             if (processIndex !== -1) {
                 const processes = results[processIndex] || [];
                 renderOptions('sl-type', processes);
@@ -896,18 +940,20 @@ async function loadAllSelects() {
 }
 
 async function createProject(customerId, name) {
-    const c = customerId || (document.getElementById('newProjectCustomer') && document.getElementById('newProjectCustomer').value);
+    const c =
+        customerId ||
+        (document.getElementById('newProjectCustomer') && document.getElementById('newProjectCustomer').value);
     const n = name || (document.getElementById('newProjectName') && document.getElementById('newProjectName').value);
 
     if (!c || !n) return null;
 
-    const payload = { customerId: mapCustomerToId(c), name: n };
+    const payload = {customerId: mapCustomerToId(c), name: n};
 
     try {
         const res = await fetch('/sample-system/api/projects/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload),
         });
 
         if (!res.ok) throw new Error(res.statusText || 'API error');
@@ -924,12 +970,13 @@ async function createProject(customerId, name) {
                 id: returned.id,
                 customer: returned.customerId || c,
                 name: returned.name || n,
-                createdDate: returned.createdAt ? returned.createdAt.split(' ')[0] : new Date().toISOString().split('T')[0],
+                createdDate: returned.createdAt
+                    ? returned.createdAt.split(' ')[0]
+                    : new Date().toISOString().split('T')[0],
                 status: returned.status || 'CREATED',
                 taskCount: 0,
-                tasks: []
+                tasks: [],
             };
-
         } catch (parseErr) {
             console.error('createProject: Failed to parse response', parseErr);
             return null;
@@ -958,11 +1005,11 @@ async function saveTasksForProject(taskIds, customerId, name, projectId) {
 
     try {
         const url = `/sample-system/api/projects/${projectIdInt}/update`;
-        const taskIdsPayload = taskIds.map(id => Number(id))
+        const taskIdsPayload = taskIds.map((id) => Number(id));
         const res = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(taskIdsPayload)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(taskIdsPayload),
         });
         if (!res.ok) {
             const errorText = await res.text().catch(() => '');
@@ -985,14 +1032,10 @@ async function ensureProjectPersisted(project) {
         return pid;
     }
 
-    // Show loading indicator during persistence
-    try { loader.load(); } catch (e) { /* loader may not be available */ }
-
     try {
         const created = await createProject(project.customer, project.name);
         if (created && created.id && !String(created.id).startsWith('TEMP-')) {
             project.id = created.id;
-            try { loader.unload(); } catch (e) { }
             return project.id;
         }
     } catch (e) {
@@ -1004,36 +1047,35 @@ async function ensureProjectPersisted(project) {
         if (project.name) params.append('projectName', project.name);
         if (project.customer) params.append('customerId', mapCustomerToId(project.customer));
 
-        const maxAttempts = 3; // Reduced from 5 for faster feedback
-        const delayMs = 300;   // Reduced from 500ms
-
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        for (let attempt = 0; attempt < 5; attempt++) {
             try {
-                const res = await fetch('/sample-system/api/projects' + (params.toString() ? ('?' + params.toString()) : ''));
+                const res = await fetch(
+                    '/sample-system/api/projects' + (params.toString() ? '?' + params.toString() : '')
+                );
                 if (res.ok) {
                     const json = await res.json();
-                    const list = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+                    const list = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
                     if (list && list.length) {
-                        const found = list.find(p => String(p.name) === String(project.name) && (String(p.customerId || p.customer || '') === String(mapCustomerToId(project.customer))));
+                        const found = list.find(
+                            (p) =>
+                                String(p.name) === String(project.name) &&
+                                String(p.customerId || p.customer || '') === String(mapCustomerToId(project.customer))
+                        );
                         if (found && found.id && !String(found.id).startsWith('TEMP-')) {
                             project.id = found.id;
-                            try { loader.unload(); } catch (e) { }
                             return project.id;
                         }
                     }
                 }
             } catch (e) {
-                console.warn(`ensureProjectPersisted: query attempt ${attempt + 1}/${maxAttempts} failed`, e);
+                console.warn('ensureProjectPersisted: query attempt failed', e);
             }
-            if (attempt < maxAttempts - 1) {
-                await new Promise(r => setTimeout(r, delayMs));
-            }
+            await new Promise((r) => setTimeout(r, 500));
         }
     } catch (e) {
         console.warn('ensureProjectPersisted: fallback search failed', e);
     }
 
-    try { loader.unload(); } catch (e) { }
     return null;
 }
 
@@ -1042,46 +1084,54 @@ let projectList = [];
 let selectedPPAPItems = [];
 let createModalOriginalTitleHTML = null;
 let currentTaskDetailObj = null;
-let draggedTaskRow = null;
 
 function rangePicker($input, fromDate, toDate) {
     let start = null;
     let end = null;
     if (window.moment) {
         try {
-            const mStart = window.moment((fromDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            const mStart = window.moment((fromDate || '').split(' ')[0], 'YYYY/MM/DD', true);
             if (mStart && typeof mStart.isValid === 'function' && mStart.isValid()) start = mStart;
-        } catch (e) { start = null; }
+        } catch (e) {
+            start = null;
+        }
 
         try {
-            const mEnd = window.moment((toDate || "").split(" ")[0], "YYYY/MM/DD", true);
+            const mEnd = window.moment((toDate || '').split(' ')[0], 'YYYY/MM/DD', true);
             if (mEnd && typeof mEnd.isValid === 'function' && mEnd.isValid()) end = mEnd;
-        } catch (e) { end = null; }
+        } catch (e) {
+            end = null;
+        }
     }
 
+    const fallbackStart = new Date();
+    fallbackStart.setMonth(fallbackStart.getMonth() - 1);
+
     $input.daterangepicker({
-        startDate: start || new Date(Date.now() - 6 * 86400000),
+        startDate: start || fallbackStart,
         endDate: end || new Date(),
         autoApply: false,
-        locale: { format: "YYYY/MM/DD" },
+        locale: {format: 'YYYY/MM/DD'},
     });
 }
 
 function singlePicker($input, workDate) {
-    const dateOnly = (workDate || "").split(" ")[0];
+    const dateOnly = (workDate || '').split(' ')[0];
     let start = null;
     if (window.moment) {
         try {
-            const m = window.moment(dateOnly, "YYYY/MM/DD", true);
+            const m = window.moment(dateOnly, 'YYYY/MM/DD', true);
             if (m && typeof m.isValid === 'function' && m.isValid()) start = m;
-        } catch (e) { start = null; }
+        } catch (e) {
+            start = null;
+        }
     }
 
     $input.daterangepicker({
         singleDatePicker: true,
         startDate: start || new Date(),
         autoApply: false,
-        locale: { format: "YYYY/MM/DD" },
+        locale: {format: 'YYYY/MM/DD'},
     });
 }
 
@@ -1096,9 +1146,17 @@ function mapCustomerToId(cust) {
     return cust;
 }
 
-function getEl(id) { return document.getElementById(id); }
-function safeSetDisplay(id, value) { const e = getEl(id); if (e && e.style) e.style.display = value; }
-function safeSetText(id, text) { const e = getEl(id); if (e) e.textContent = text; }
+function getEl(id) {
+    return document.getElementById(id);
+}
+function safeSetDisplay(id, value) {
+    const e = getEl(id);
+    if (e && e.style) e.style.display = value;
+}
+function safeSetText(id, text) {
+    const e = getEl(id);
+    if (e) e.textContent = text;
+}
 
 function getElValue(el) {
     if (!el) return '';
@@ -1114,11 +1172,15 @@ function setElValue(el, value) {
     else el.textContent = value || '';
 }
 
-
-
 async function loadProjectList() {
-    const waitingBody = getEl('waitingApprovalBody') || (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) || null;
-    const otherBody = getEl('otherProjectsBody') || (getEl('otherProjectsSection') && getEl('otherProjectsSection').querySelector('tbody')) || null;
+    const waitingBody =
+        getEl('waitingApprovalBody') ||
+        (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) ||
+        null;
+    const otherBody =
+        getEl('otherProjectsBody') ||
+        (getEl('otherProjectsSection') && getEl('otherProjectsSection').querySelector('tbody')) ||
+        null;
 
     if (!waitingBody && !otherBody) {
         return;
@@ -1130,7 +1192,7 @@ async function loadProjectList() {
         if (res.ok) {
             const json = await res.json();
             if (json.status === 'OK' && Array.isArray(json.data)) {
-                projectList = json.data.map(p => ({
+                projectList = json.data.map((p) => ({
                     id: p.id,
                     customer: p.customerId || 'N/A',
                     name: p.name,
@@ -1141,7 +1203,7 @@ async function loadProjectList() {
                     approvedBy: p.approvedBy || '',
                     approvedAt: p.approvedAt || '',
                     taskCount: p.taskCount || 0,
-                    tasks: []
+                    tasks: [],
                 }));
             }
         }
@@ -1157,19 +1219,34 @@ function buildProjectFilterParams() {
     const params = new URLSearchParams();
 
     try {
-        const projectName = (document.getElementById('ppapFilterProject') && document.getElementById('ppapFilterProject').value) ? document.getElementById('ppapFilterProject').value.trim() : '';
+        const projectName =
+            document.getElementById('ppapFilterProject') && document.getElementById('ppapFilterProject').value
+                ? document.getElementById('ppapFilterProject').value.trim()
+                : '';
         if (projectName) params.append('projectName', projectName);
 
-        const customerId = (document.getElementById('projectCustomerSelect') && document.getElementById('projectCustomerSelect').value) ? document.getElementById('projectCustomerSelect').value.trim() : '';
+        const customerId =
+            document.getElementById('projectCustomerSelect') && document.getElementById('projectCustomerSelect').value
+                ? document.getElementById('projectCustomerSelect').value.trim()
+                : '';
         if (customerId) params.append('customerId', customerId);
 
-        const createBy = (document.getElementById('filter-created-by') && document.getElementById('filter-created-by').value) ? document.getElementById('filter-created-by').value.trim() : '';
+        const createBy =
+            document.getElementById('filter-created-by') && document.getElementById('filter-created-by').value
+                ? document.getElementById('filter-created-by').value.trim()
+                : '';
         if (createBy) params.append('createBy', createBy);
 
-        const createdDate = (document.getElementById('filter-created-date') && document.getElementById('filter-created-date').value) ? document.getElementById('filter-created-date').value.trim() : '';
+        const createdDate =
+            document.getElementById('filter-created-date') && document.getElementById('filter-created-date').value
+                ? document.getElementById('filter-created-date').value.trim()
+                : '';
         if (createdDate) {
             // expected format: "YYYY/MM/DD - YYYY/MM/DD" or similar
-            const parts = createdDate.split('-').map(s => s.trim()).filter(Boolean);
+            const parts = createdDate
+                .split('-')
+                .map((s) => s.trim())
+                .filter(Boolean);
             if (parts.length === 2) {
                 let start = parts[0];
                 let end = parts[1];
@@ -1181,7 +1258,9 @@ function buildProjectFilterParams() {
                         if (ms && ms.isValid && ms.isValid()) start = ms.format('YYYY/MM/DD');
                         if (me && me.isValid && me.isValid()) end = me.format('YYYY/MM/DD');
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) {
+                    /* ignore */
+                }
 
                 // Chuẩn hóa full datetime cho API: YYYY/MM/DD HH:mm:ss
                 const startFull = DateFormatter.toAPIFormat(start + ' 00:00:00');
@@ -1197,8 +1276,9 @@ function buildProjectFilterParams() {
             const projectStatusEl = document.getElementById('ppapFilterProjectStatus');
             const projectStatus = projectStatusEl && projectStatusEl.value ? projectStatusEl.value.trim() : '';
             if (projectStatus) params.append('status', projectStatus);
-        } catch (e) { /* ignore */ }
-
+        } catch (e) {
+            /* ignore */
+        }
     } catch (e) {
         console.warn('buildProjectFilterParams error', e);
     }
@@ -1210,7 +1290,7 @@ async function filterProjects() {
     try {
         const params = buildProjectFilterParams();
         const base = '/sample-system/api/projects';
-        const url = params.toString() ? (base + '?' + params.toString()) : base;
+        const url = params.toString() ? base + '?' + params.toString() : base;
 
         const res = await fetch(url);
         if (!res.ok) {
@@ -1220,9 +1300,9 @@ async function filterProjects() {
         }
 
         const json = await res.json();
-        const data = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
+        const data = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
 
-        projectList = data.map(p => ({
+        projectList = data.map((p) => ({
             id: p.id,
             customer: p.customerId || 'N/A',
             name: p.name,
@@ -1233,7 +1313,7 @@ async function filterProjects() {
             approvedBy: p.approvedBy || '',
             approvedAt: p.approvedAt || '',
             taskCount: p.taskCount || 0,
-            tasks: Array.isArray(p.tasks) ? p.tasks.slice() : []
+            tasks: Array.isArray(p.tasks) ? p.tasks.slice() : [],
         }));
 
         renderProjectListUI();
@@ -1250,28 +1330,25 @@ function clearAdvancedFilters() {
 
         if (section) {
             const inputs = section.querySelectorAll('input, select, textarea');
-            inputs.forEach(el => {
+            inputs.forEach((el) => {
                 try {
                     if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                     else el.value = '';
-                    el.dispatchEvent(new Event('change', { bubbles: true }));
-                } catch (e) { }
+                    el.dispatchEvent(new Event('change', {bubbles: true}));
+                } catch (e) {}
             });
         }
 
-        const extraIds = [
-            'ppapFilterProject', 'projectCustomerSelect',
-            'filter-created-by', 'filter-created-date'
-        ];
+        const extraIds = ['ppapFilterProject', 'projectCustomerSelect', 'filter-created-by', 'filter-created-date'];
 
-        extraIds.forEach(id => {
+        extraIds.forEach((id) => {
             try {
                 const el = document.getElementById(id);
                 if (!el) return;
                 if (el.type === 'checkbox' || el.type === 'radio') el.checked = false;
                 else el.value = '';
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            } catch (e) { }
+                el.dispatchEvent(new Event('change', {bubbles: true}));
+            } catch (e) {}
         });
 
         try {
@@ -1280,36 +1357,30 @@ function clearAdvancedFilters() {
                 $(createdDate).val('');
                 $(createdDate).trigger('change');
             }
-        } catch (e) { }
+        } catch (e) {}
 
-        try { loadProjectList(); } catch (e) { console.warn(e); }
+        try {
+            loadProjectList();
+        } catch (e) {
+            console.warn(e);
+        }
     } catch (e) {
         console.warn(e);
     }
 }
 
-// Helper function to normalize status for consistent comparison
-function normalizeStatus(status) {
-    if (!status) return '';
-    return String(status).toUpperCase().replace(/[_-]/g, '_');
-}
-
-// Check if a status represents "waiting for approval"
-function isWaitingStatus(status) {
-    const normalized = normalizeStatus(status);
-    return normalized === 'WAITING' ||
-           normalized === 'WAITING_FOR_APPROVAL' ||
-           (normalized.includes('WAIT') && normalized.includes('APPROVAL'));
-}
-
 function renderProjectListUI() {
-    const waitingBody = getEl('waitingApprovalBody') || (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) || null;
-    const otherBody = getEl('otherProjectsBody') || (getEl('otherProjectsSection') && getEl('otherProjectsSection').querySelector('tbody')) || null;
+    const waitingBody =
+        getEl('waitingApprovalBody') ||
+        (getEl('waitingApprovalSection') && getEl('waitingApprovalSection').querySelector('tbody')) ||
+        null;
+    const otherBody =
+        getEl('otherProjectsBody') ||
+        (getEl('otherProjectsSection') && getEl('otherProjectsSection').querySelector('tbody')) ||
+        null;
 
-    // Use normalized status comparison
-    const waitingProjects = projectList.filter(p => isWaitingStatus(p.status));
-    // Exclude waiting projects from other projects list (fix issue #9)
-    const otherProjects = projectList.filter(p => !isWaitingStatus(p.status));
+    const waitingProjects = projectList.filter((p) => p.status === 'waiting');
+    const otherProjects = projectList.slice();
 
     if (waitingBody) {
         if (waitingProjects.length === 0) {
@@ -1319,31 +1390,50 @@ function renderProjectListUI() {
                 </td></tr>
             `;
         } else {
-            waitingBody.innerHTML = waitingProjects.map(project => {
-                const custName = getCustomerDisplay(project.customer);
-                const statusBadge = getStatusBadge(project.status);
-                return `
-                <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
+            waitingBody.innerHTML = waitingProjects
+                .map((project) => {
+                    const custName = getCustomerDisplay(project.customer);
+                    const statusBadge = getStatusBadge(project.status);
+                    return `
+                <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${
+                        project.id
+                    }')" style="cursor:pointer">
                     <td>${custName}</td>
                     <td><strong>${project.name}</strong></td>
                     <td>${statusBadge}</td>
                     <td>${getUserLabelById(project.createdBy)}</td>
-                    <td>${(project.createdDate && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.createdDate) : (project.createdDate || '')}</td>
+                    <td>${
+                        project.createdDate && typeof DateFormatter !== 'undefined'
+                            ? DateFormatter.toDisplayFormat(project.createdDate)
+                            : project.createdDate || ''
+                    }</td>
                     <td>${getUserLabelById(project.approvedBy)}</td>
-                    <td>${(project.approvedAt && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.approvedAt) : (project.approvedAt || '')}</td>
+                    <td>${
+                        project.approvedAt && typeof DateFormatter !== 'undefined'
+                            ? DateFormatter.toDisplayFormat(project.approvedAt)
+                            : project.approvedAt || ''
+                    }</td>
                     <td>
-                        <button class="action-btn-sm btn-success" onclick="event.stopPropagation(); approveProject('${project.id}')">
+                        <button class="action-btn-sm btn-success" onclick="event.stopPropagation(); approveProject('${
+                            project.id
+                        }')">
                             <i class="bi bi-check-circle"></i> Approve
                         </button>
-                        <button class="action-btn-sm btn-danger" onclick="event.stopPropagation(); rejectProject('${project.id}')">
+                        <button class="action-btn-sm btn-danger" onclick="event.stopPropagation(); rejectProject('${
+                            project.id
+                        }')">
                             <i class="bi bi-x-circle"></i> Reject
                         </button>
-                        <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${project.id}')">
+                        <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${
+                            project.id
+                        }')">
                             <i class="bi bi-eye"></i> View
                         </button>
                     </td>
                 </tr>
-            `}).join('');
+            `;
+                })
+                .join('');
         }
     }
 
@@ -1355,29 +1445,45 @@ function renderProjectListUI() {
                 </td></tr>
             `;
         } else {
-            otherBody.innerHTML = otherProjects.map(project => {
-                const statusBadge = getStatusBadge(project.status);
-                const custName = getCustomerDisplay(project.customer);
-                return `
-                    <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${project.id}')" style="cursor:pointer">
+            otherBody.innerHTML = otherProjects
+                .map((project) => {
+                    const statusBadge = getStatusBadge(project.status);
+                    const custName = getCustomerDisplay(project.customer);
+                    return `
+                    <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${
+                        project.id
+                    }')" style="cursor:pointer">
                         <td>${custName}</td>
                         <td><strong>${project.name}</strong></td>
                         <td>${statusBadge}</td>
                         <td>${getUserLabelById(project.createdBy)}</td>
-                        <td>${(project.createdDate && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.createdDate) : (project.createdDate || '')}</td>
+                        <td>${
+                            project.createdDate && typeof DateFormatter !== 'undefined'
+                                ? DateFormatter.toDisplayFormat(project.createdDate)
+                                : project.createdDate || ''
+                        }</td>
                         <td>${getUserLabelById(project.approvedBy)}</td>
-                        <td>${(project.approvedAt && typeof DateFormatter !== 'undefined') ? DateFormatter.toDisplayFormat(project.approvedAt) : (project.approvedAt || '')}</td>
+                        <td>${
+                            project.approvedAt && typeof DateFormatter !== 'undefined'
+                                ? DateFormatter.toDisplayFormat(project.approvedAt)
+                                : project.approvedAt || ''
+                        }</td>
                         <td>
-                            <button class="action-btn-sm" onclick="event.stopPropagation(); showProjectTasksModal('${project.id}')" title="View tasks">
+                            <button class="action-btn-sm" onclick="event.stopPropagation(); showRACIMatrix('${
+                                project.id
+                            }')" title="View RACI Matrix">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <button class="action-btn-sm btn-danger" onclick="event.stopPropagation(); deleteProject('${project.id}')" title="Delete project">
+                            <button class="action-btn-sm btn-danger" onclick="event.stopPropagation(); deleteProject('${
+                                project.id
+                            }')" title="Delete project">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </td>
                     </tr>
                 `;
-            }).join('');
+                })
+                .join('');
         }
     }
 
@@ -1386,15 +1492,14 @@ function renderProjectListUI() {
 
 function getStatusBadge(status) {
     const badges = {
-        'approved': '<span class="badge badge-success">已核准</span>',
-        'rejected': '<span class="badge badge-danger">已拒絕</span>',
+        approved: '<span class="badge badge-success">已核准</span>',
+        rejected: '<span class="badge badge-danger">已拒絕</span>',
         'in-progress': '<span class="badge badge-info">進行中</span>',
-        'completed': '<span class="badge badge-primary">已完成</span>',
-        'on-hold': '<span class="badge badge-secondary">暫停</span>'
+        completed: '<span class="badge badge-primary">已完成</span>',
+        'on-hold': '<span class="badge badge-secondary">暫停</span>',
     };
     return badges[status] || `<span class="badge">${status}</span>`;
 }
-
 
 function getCustomerDisplay(cust) {
     if (cust === null || cust === undefined || cust === '' || String(cust).toLowerCase() === 'n/a') return 'N/A';
@@ -1409,7 +1514,7 @@ let draggedElement = null;
 function initDragAndDrop() {
     const rows = document.querySelectorAll('tr[draggable="true"]');
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
         row.removeEventListener('dragstart', handleDragStart);
         row.removeEventListener('dragover', handleDragOver);
         row.removeEventListener('drop', handleDrop);
@@ -1477,47 +1582,22 @@ function handleDrop(e) {
 function handleDragEnd(e) {
     this.style.opacity = '1';
 
-    document.querySelectorAll('tr[draggable="true"]').forEach(row => {
+    document.querySelectorAll('tr[draggable="true"]').forEach((row) => {
         row.style.borderTop = '';
         row.style.borderBottom = '';
     });
 }
 
 function updateProjectOrder(section) {
-    const tbody = section === 'waiting'
-        ? document.getElementById('waitingApprovalBody')
-        : document.getElementById('otherProjectsBody');
+    const tbody =
+        section === 'waiting'
+            ? document.getElementById('waitingApprovalBody')
+            : document.getElementById('otherProjectsBody');
 
     if (!tbody) return;
 
-    const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr =>
-        tr.dataset.projectId
-    );
-
-    // Reorder projectList based on the new DOM order
-    const projectMap = {};
-    projectList.forEach(p => { if (p && p.id) projectMap[String(p.id)] = p; });
-
-    // Get projects for this section
-    const sectionProjects = section === 'waiting'
-        ? projectList.filter(p => isWaitingStatus(p.status))
-        : projectList.filter(p => !isWaitingStatus(p.status));
-
-    // Reorder section projects based on newOrder
-    const reorderedSection = newOrder.map(id => projectMap[String(id)]).filter(Boolean);
-
-    // Rebuild projectList maintaining both sections
-    if (section === 'waiting') {
-        const otherProjects = projectList.filter(p => !isWaitingStatus(p.status));
-        projectList = [...reorderedSection, ...otherProjects];
-    } else {
-        const waitingProjects = projectList.filter(p => isWaitingStatus(p.status));
-        projectList = [...waitingProjects, ...reorderedSection];
-    }
-
-    console.log('Project order updated for section:', section, 'New order:', newOrder);
+    const newOrder = Array.from(tbody.querySelectorAll('tr')).map((tr) => tr.dataset.projectId);
 }
-
 
 function viewProjectDetails(projectId) {
     showProjectTasksModal(projectId);
@@ -1537,18 +1617,19 @@ async function fetchAndRenderAttachments(taskId) {
         }
 
         const json = await res.json();
-        const items = json && (json.data || json.result) ? (json.data || json.result) : [];
+        const items = json && (json.data || json.result) ? json.data || json.result : [];
         if (!Array.isArray(items) || items.length === 0) {
             listEl.innerHTML = '<div class="text-muted">No attachments</div>';
             return;
         }
 
-        const rows = items.map(it => {
-            const url = it.url || it.downloadUrl || '';
-            const name = it.name || it.fileName || it.filename || String(it.id || '');
-            const safeName = escapeHtml(name);
-            const safeUrl = escapeHtml(url);
-            return `
+        const rows = items
+            .map((it) => {
+                const url = it.url || it.downloadUrl || '';
+                const name = it.name || it.fileName || it.filename || String(it.id || '');
+                const safeName = escapeHtml(name);
+                const safeUrl = escapeHtml(url);
+                return `
                 <div class="attachment-item">
                     <div class="attachment-info">
                         <span class="attachment-icon"><i class="bi bi-file-earmark"></i></span>
@@ -1558,11 +1639,12 @@ async function fetchAndRenderAttachments(taskId) {
                         <span><i class="bi bi-download"></i> Download</span>
                     </button>
                 </div>`;
-        }).join('');
+            })
+            .join('');
 
         listEl.innerHTML = rows;
 
-        listEl.querySelectorAll('.download-btn').forEach(btn => {
+        listEl.querySelectorAll('.download-btn').forEach((btn) => {
             btn.addEventListener('click', function () {
                 const url = this.dataset.url;
                 const filename = this.dataset.filename;
@@ -1600,7 +1682,6 @@ async function fetchAndRenderAttachments(taskId) {
     }
 }
 
-
 async function showProjectTasksModal(projectId) {
     if (!projectId || projectId === 'null' || projectId === 'undefined') {
         showAlertWarning('Warning', 'Invalid project ID');
@@ -1619,7 +1700,10 @@ async function showProjectTasksModal(projectId) {
         const pidEl = document.getElementById('pt_detail_projectId');
         const setAndDisable = (id, val) => {
             const el = document.getElementById(id);
-            if (el) { el.value = val || ''; el.disabled = true; }
+            if (el) {
+                el.value = val || '';
+                el.disabled = true;
+            }
         };
 
         if (project) {
@@ -1636,8 +1720,20 @@ async function showProjectTasksModal(projectId) {
             setAndDisable('pt_detail_createdDate', project.createdDate || '');
             setAndDisable('pt_detail_status', project.status || '');
         } else {
-            const ids = ['pt_detail_projectId', 'pt_detail_customer', 'pt_detail_projectName', 'pt_detail_createdDate', 'pt_detail_status'];
-            ids.forEach(id => { const el = document.getElementById(id); if (el) { el.value = ''; el.disabled = true; } });
+            const ids = [
+                'pt_detail_projectId',
+                'pt_detail_customer',
+                'pt_detail_projectName',
+                'pt_detail_createdDate',
+                'pt_detail_status',
+            ];
+            ids.forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = '';
+                    el.disabled = true;
+                }
+            });
         }
     } catch (e) {
         console.warn('Failed to populate project detail pane:', e);
@@ -1647,8 +1743,11 @@ async function showProjectTasksModal(projectId) {
         const modalEl = document.getElementById('projectTasksModal');
         if (modalEl) {
             const footer = modalEl.querySelector('.modal-footer');
-            // Use normalized status comparison (consistent with renderProjectListUI)
-            const waiting = project ? isWaitingStatus(project.status) : false;
+            const statusVal = project && project.status ? String(project.status).toUpperCase() : '';
+            const waiting =
+                statusVal === 'WAITING_FOR_APPROVAL' ||
+                statusVal === 'WAITING' ||
+                (statusVal.indexOf('WAIT') !== -1 && statusVal.indexOf('APPROVAL') !== -1);
 
             const saveBtn = footer ? footer.querySelector("button[onclick='saveProjectTaskQuantity()']") : null;
             const submitBtn = footer ? footer.querySelector("button[onclick='projectTasksSubmit()']") : null;
@@ -1662,7 +1761,10 @@ async function showProjectTasksModal(projectId) {
                 rejectBtn.type = 'button';
                 rejectBtn.innerHTML = '<i class="bi bi-x-circle"></i> Reject';
                 rejectBtn.style.display = 'none';
-                rejectBtn.addEventListener('click', function (ev) { ev.stopPropagation(); if (project && project.id) rejectProject(project.id); });
+                rejectBtn.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    if (project && project.id) rejectProject(project.id);
+                });
                 footer.appendChild(rejectBtn);
             }
 
@@ -1673,7 +1775,10 @@ async function showProjectTasksModal(projectId) {
                 approveBtn.type = 'button';
                 approveBtn.innerHTML = '<i class="bi bi-check-circle"></i> Approve';
                 approveBtn.style.display = 'none';
-                approveBtn.addEventListener('click', function (ev) { ev.stopPropagation(); if (project && project.id) approveProject(project.id); });
+                approveBtn.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    if (project && project.id) approveProject(project.id);
+                });
                 footer.appendChild(approveBtn);
             }
 
@@ -1694,18 +1799,15 @@ async function showProjectTasksModal(projectId) {
     }
 
     const container = document.getElementById('projectTasksContent');
-    if (container) container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-secondary)"><i class="bi bi-hourglass-split"></i> Loading tasks...</div>`;
+    if (container)
+        container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-secondary)"><i class="bi bi-hourglass-split"></i> Loading tasks...</div>`;
 
     openProjectTasksModal();
 
     try {
         const url = new URL(window.location.href);
         url.searchParams.set('projectId', String(projectId));
-        window.history.pushState(
-            { projectId: projectId },
-            '',
-            url.toString()
-        );
+        window.history.pushState({projectId: projectId}, '', url.toString());
     } catch (e) {
         console.warn('Failed to pushState for project deep-link', e);
     }
@@ -1730,7 +1832,6 @@ async function showProjectTasksModal(projectId) {
 
         renderProjectTasksContent(tasks, projectId);
         loader.unload();
-
     } catch (e) {
         loader.unload();
         console.error('Failed to load tasks:', e);
@@ -1740,7 +1841,6 @@ async function showProjectTasksModal(projectId) {
     }
 }
 
-
 function renderProjectTasksContent(tasks, projectId) {
     const container = document.getElementById('projectTasksContent');
     if (!container) return;
@@ -1748,20 +1848,21 @@ function renderProjectTasksContent(tasks, projectId) {
     if (tasks.length === 0) {
         container.innerHTML = `<div style="color:var(--text-secondary)">This project has no tasks.</div>`;
     } else {
-        const rows = tasks.map((t, index) => {
-            if (t) t.step = index + 1;
-            
-            // Format status badge
-            const statusClass = getStatusBadgeClass(t.status);
-            const statusLabel = getStatusLabel(t.status);
-            const statusBadge = `<span class="task-status-badge ${statusClass}">${statusLabel}</span>`;
-            
-            // Format priority badge
-            const priorityClass = getPriorityBadgeClass(t.priority);
-            const priorityLabel = getPriorityLabel(t.priority);
-            const priorityBadge = `<span class="priority-badge ${priorityClass}">${priorityLabel}</span>`;
-            
-            return `
+        const rows = tasks
+            .map((t, index) => {
+                if (t) t.step = index + 1;
+
+                // Format status badge
+                const statusClass = getStatusBadgeClass(t.status);
+                const statusLabel = getStatusLabel(t.status);
+                const statusBadge = `<span class="task-status-badge ${statusClass}">${statusLabel}</span>`;
+
+                // Format priority badge
+                const priorityClass = getPriorityBadgeClass(t.priority);
+                const priorityLabel = getPriorityLabel(t.priority);
+                const priorityBadge = `<span class="priority-badge ${priorityClass}">${priorityLabel}</span>`;
+
+                return `
             <tr draggable="true" 
                 data-task-id="${t.id}" 
                 data-task-index="${index}"
@@ -1769,7 +1870,7 @@ function renderProjectTasksContent(tasks, projectId) {
                 <td class="drag-handle" style="width:36px;text-align:center;cursor:grab" onmousedown="event.stopPropagation()">
                     <i class="bi bi-grip-vertical" title="Drag" aria-hidden="true"></i>
                 </td>
-                <td style="width:48px">${t.step || (index + 1)}</td>
+                <td style="width:48px">${t.step || index + 1}</td>
                 <td>${t.taskCode || ''}</td>
                 <td>${t.name || ''}</td>
                 <td>${t.processId || ''}</td>
@@ -1778,12 +1879,16 @@ function renderProjectTasksContent(tasks, projectId) {
                 <td>${t.dri || ''}</td>
                 <td>${t.dueDate || ''}</td>
                 <td style="text-align:center">
-                    <button class="action-btn-sm" onclick="event.stopPropagation(); removeTaskFromProject('${projectId}', '${t.id}')" title="Remove">
+                    <button class="action-btn-sm" onclick="event.stopPropagation(); removeTaskFromProject('${projectId}', '${
+                    t.id
+                }')" title="Remove">
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
             </tr>
-        `}).join('');
+        `;
+            })
+            .join('');
 
         container.innerHTML = `
             <table id="projectTasksTable" class="table mt-0">
@@ -1812,7 +1917,9 @@ function renderProjectTasksContent(tasks, projectId) {
                 style.innerHTML = `.drag-handle { cursor: grab; } .drag-handle:active { cursor: grabbing; }`;
                 document.head.appendChild(style);
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+            /* ignore */
+        }
 
         initProjectTasksDragAndDrop(projectId);
     }
@@ -1826,7 +1933,7 @@ function initProjectTasksDragAndDrop(projectId) {
 
     const rows = table.querySelectorAll('tbody tr[draggable="true"]');
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
         row.removeEventListener('dragstart', handleProjectTaskDragStart);
         row.removeEventListener('dragover', handleProjectTaskDragOver);
         row.removeEventListener('drop', handleProjectTaskDrop);
@@ -1834,7 +1941,9 @@ function initProjectTasksDragAndDrop(projectId) {
 
         row.addEventListener('dragstart', handleProjectTaskDragStart);
         row.addEventListener('dragover', handleProjectTaskDragOver);
-        row.addEventListener('drop', function (e) { return handleProjectTaskDrop.call(this, e, projectId); });
+        row.addEventListener('drop', function (e) {
+            return handleProjectTaskDrop.call(this, e, projectId);
+        });
         row.addEventListener('dragend', handleProjectTaskDragEnd);
     });
 }
@@ -1887,7 +1996,7 @@ function handleProjectTaskDrop(e, projectId) {
         console.warn('Failed to re-render project tasks after drop', e);
     }
 
-    document.querySelectorAll('#projectTasksTable tbody tr').forEach(r => {
+    document.querySelectorAll('#projectTasksTable tbody tr').forEach((r) => {
         r.style.borderTop = '';
         r.style.borderBottom = '';
     });
@@ -1897,7 +2006,7 @@ function handleProjectTaskDrop(e, projectId) {
 
 function handleProjectTaskDragEnd(e) {
     this.style.opacity = '1';
-    document.querySelectorAll('#projectTasksTable tbody tr').forEach(r => {
+    document.querySelectorAll('#projectTasksTable tbody tr').forEach((r) => {
         r.style.borderTop = '';
         r.style.borderBottom = '';
     });
@@ -1911,14 +2020,20 @@ function updateProjectTaskOrder(projectId) {
     const tbody = document.querySelector('#projectTasksTable tbody');
     if (!tbody) return;
 
-    const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.dataset.taskId);
+    const newOrder = Array.from(tbody.querySelectorAll('tr')).map((tr) => tr.dataset.taskId);
 
     const taskMap = {};
-    project.tasks.forEach(t => { taskMap[String(t.id)] = t; });
-    project.tasks = newOrder.map(id => taskMap[String(id)]).filter(Boolean);
+    project.tasks.forEach((t) => {
+        taskMap[String(t.id)] = t;
+    });
+    project.tasks = newOrder.map((id) => taskMap[String(id)]).filter(Boolean);
 
     project.tasks.forEach((t, idx) => {
-        try { t.step = idx + 1; } catch (e) { /* ignore */ }
+        try {
+            t.step = idx + 1;
+        } catch (e) {
+            /* ignore */
+        }
     });
 }
 
@@ -1933,10 +2048,16 @@ function openProjectTasksModal() {
 }
 
 function showEditTaskModal(projectId, taskId) {
-    const project = projectList.find(p => String(p.id) === String(projectId));
-    if (!project) { showAlertError('Error', 'Project not found'); return; }
-    const task = (project.tasks || []).find(t => String(t.id) === String(taskId));
-    if (!task) { showAlertError('Error', 'Task not found'); return; }
+    const project = projectList.find((p) => String(p.id) === String(projectId));
+    if (!project) {
+        showAlertError('Error', 'Project not found');
+        return;
+    }
+    const task = (project.tasks || []).find((t) => String(t.id) === String(taskId));
+    if (!task) {
+        showAlertError('Error', 'Task not found');
+        return;
+    }
 
     getEl('editTaskProjectId').value = projectId;
     getEl('editTaskId').value = taskId;
@@ -1946,8 +2067,12 @@ function showEditTaskModal(projectId, taskId) {
     getEl('editTaskStatus').value = task.status || '';
     getEl('editTaskPriority').value = task.priority || '';
 
-    try { new bootstrap.Modal(document.getElementById('editTaskModal')).show(); }
-    catch (e) { const el = document.getElementById('editTaskModal'); if (el) el.classList.add('active'); }
+    try {
+        new bootstrap.Modal(document.getElementById('editTaskModal')).show();
+    } catch (e) {
+        const el = document.getElementById('editTaskModal');
+        if (el) el.classList.add('active');
+    }
 }
 
 async function showTaskDetailModal(projectId, taskId) {
@@ -1972,7 +2097,7 @@ async function showTaskDetailModal(projectId, taskId) {
         }
 
         if (!task && project && Array.isArray(project.tasks)) {
-            task = project.tasks.find(t => String(t.id) === String(taskId));
+            task = project.tasks.find((t) => String(t.id) === String(taskId));
         }
 
         if (!task) {
@@ -1994,11 +2119,7 @@ async function showTaskDetailModal(projectId, taskId) {
         try {
             const url = new URL(window.location.href);
             url.searchParams.set('taskId', String(taskId));
-            window.history.pushState(
-                { taskId: taskId, projectId: projectId || null },
-                '',
-                url.toString()
-            );
+            window.history.pushState({taskId: taskId, projectId: projectId || null}, '', url.toString());
         } catch (e) {
             console.warn('Failed to pushState for task deep-link', e);
         }
@@ -2035,8 +2156,7 @@ async function showTaskDetailModal(projectId, taskId) {
                     deadLineInput.dataset.initialValue = '';
                 }
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.warn('Failed to set sidebar inputs (#dri, #deadLine):', e);
         }
 
@@ -2045,14 +2165,16 @@ async function showTaskDetailModal(projectId, taskId) {
             statusBadge.textContent = task.status || '';
             statusBadge.classList.remove('status-in-progress', 'status-completed', 'status-pending', 'status-overdue');
             if (String(task.status).toLowerCase().includes('progress')) statusBadge.classList.add('status-in-progress');
-            else if (String(task.status).toLowerCase().includes('complete')) statusBadge.classList.add('status-completed');
+            else if (String(task.status).toLowerCase().includes('complete'))
+                statusBadge.classList.add('status-completed');
             else if (String(task.status).toLowerCase().includes('overdue')) statusBadge.classList.add('status-overdue');
             else statusBadge.classList.add('status-pending');
         }
 
         const priorityBadge = modalRoot.querySelector('.priority-badge');
         if (priorityBadge) {
-            priorityBadge.textContent = (task.priority && String(task.priority)) || (task.priority === 0 ? '0' : (task.priority || ''));
+            priorityBadge.textContent =
+                (task.priority && String(task.priority)) || (task.priority === 0 ? '0' : task.priority || '');
             priorityBadge.classList.remove('priority-high', 'priority-medium', 'priority-low');
             const p = String(task.priority || '').toLowerCase();
             if (p === 'high') priorityBadge.classList.add('priority-high');
@@ -2066,8 +2188,9 @@ async function showTaskDetailModal(projectId, taskId) {
 
             const ensureAndSet = (selectEl, value) => {
                 if (!selectEl) return;
-                const val = (value === null || value === undefined || String(value).trim() === '') ? 'N/A' : String(value);
-                const hasOption = Array.from(selectEl.options).some(o => String(o.value) === val);
+                const val =
+                    value === null || value === undefined || String(value).trim() === '' ? 'N/A' : String(value);
+                const hasOption = Array.from(selectEl.options).some((o) => String(o.value) === val);
                 if (!hasOption) {
                     const opt = document.createElement('option');
                     opt.value = val;
@@ -2090,9 +2213,11 @@ async function showTaskDetailModal(projectId, taskId) {
             if (anyOtherModalOpen) {
                 if (modalRoot.parentElement !== document.body) document.body.appendChild(modalRoot);
 
-                const elems = Array.from(document.querySelectorAll('.modal, .modal-backdrop')).filter(el => el !== modalRoot);
+                const elems = Array.from(document.querySelectorAll('.modal, .modal-backdrop')).filter(
+                    (el) => el !== modalRoot
+                );
                 let highest = 1040;
-                elems.forEach(el => {
+                elems.forEach((el) => {
                     const z = window.getComputedStyle(el).zIndex;
                     const zi = parseInt(z, 10);
                     if (!isNaN(zi) && zi > highest) highest = zi;
@@ -2129,8 +2254,12 @@ async function showTaskDetailModal(projectId, taskId) {
         } catch (e) {
             if (modalRoot) modalRoot.classList.add('active');
             setTimeout(() => {
-                try { initDeadlinePicker(); } catch (err) { }
-                try { initTaskDetailDriSelect2(); } catch (err) { }
+                try {
+                    initDeadlinePicker();
+                } catch (err) {}
+                try {
+                    initTaskDetailDriSelect2();
+                } catch (err) {}
             }, 50);
         }
 
@@ -2145,7 +2274,6 @@ async function showTaskDetailModal(projectId, taskId) {
         } catch (err) {
             console.warn('Failed to load comments for task', taskId, err);
         }
-
     } catch (e) {
         console.error('Error opening task detail modal:', e);
         showAlertError('Error', 'Failed to load task detail');
@@ -2155,8 +2283,11 @@ async function showTaskDetailModal(projectId, taskId) {
 function saveEditedTask() {
     const projectId = getEl('editTaskProjectId').value;
     const taskId = getEl('editTaskId').value;
-    const project = projectList.find(p => String(p.id) === String(projectId));
-    if (!project) { showAlertError('Error', 'Project not found'); return; }
+    const project = projectList.find((p) => String(p.id) === String(projectId));
+    if (!project) {
+        showAlertError('Error', 'Project not found');
+        return;
+    }
 
     const code = getEl('editTaskCode').value;
     const name = getEl('editTaskName').value;
@@ -2172,20 +2303,27 @@ function saveEditedTask() {
             name: name,
             description: desc,
             status: status,
-            priority: priority
+            priority: priority,
         };
         project.tasks = project.tasks || [];
         project.tasks.push(newTask);
         project.taskCount = project.tasks.length;
 
-        try { bootstrap.Modal.getInstance(getEl('editTaskModal')).hide(); } catch (e) { getEl('editTaskModal').classList.remove('active'); }
+        try {
+            bootstrap.Modal.getInstance(getEl('editTaskModal')).hide();
+        } catch (e) {
+            getEl('editTaskModal').classList.remove('active');
+        }
         showProjectTasksModal(projectId);
         showAlertSuccess('Success', 'Task added successfully');
         return;
     }
 
-    const taskIndex = (project.tasks || []).findIndex(t => String(t.id) === String(taskId));
-    if (taskIndex === -1) { showAlertError('Error', 'Task not found'); return; }
+    const taskIndex = (project.tasks || []).findIndex((t) => String(t.id) === String(taskId));
+    if (taskIndex === -1) {
+        showAlertError('Error', 'Task not found');
+        return;
+    }
 
     const updated = {
         ...project.tasks[taskIndex],
@@ -2193,19 +2331,26 @@ function saveEditedTask() {
         name: name,
         description: desc,
         status: status,
-        priority: priority
+        priority: priority,
     };
 
     project.tasks[taskIndex] = updated;
 
-    try { bootstrap.Modal.getInstance(getEl('editTaskModal')).hide(); } catch (e) { getEl('editTaskModal').classList.remove('active'); }
+    try {
+        bootstrap.Modal.getInstance(getEl('editTaskModal')).hide();
+    } catch (e) {
+        getEl('editTaskModal').classList.remove('active');
+    }
     showProjectTasksModal(projectId);
     showAlertSuccess('Success', 'Task saved');
 }
 
 async function saveTaskDetailChanges() {
     const modalRoot = document.getElementById('taskDetailModal');
-    if (!modalRoot) { showAlertError('Error', 'taskDetailModal not found'); return; }
+    if (!modalRoot) {
+        showAlertError('Error', 'taskDetailModal not found');
+        return;
+    }
 
     const projectId = modalRoot.dataset.projectId;
     const taskId = modalRoot.dataset.taskId;
@@ -2225,7 +2370,10 @@ async function saveTaskDetailChanges() {
         }
     }
 
-    if (!taskPayload) { showAlertError('Error', 'Task data not available for update'); return; }
+    if (!taskPayload) {
+        showAlertError('Error', 'Task data not available for update');
+        return;
+    }
 
     const statusSelect = modalRoot.querySelector('#sl-status');
     const prioritySelect = modalRoot.querySelector('#sl-priority');
@@ -2248,16 +2396,24 @@ async function saveTaskDetailChanges() {
         }
     }
 
-    taskPayload.status = (newStatus === 'N/A' ? null : newStatus);
-    taskPayload.priority = (newPriority === 'N/A' ? null : newPriority);
+    taskPayload.status = newStatus === 'N/A' ? null : newStatus;
+    taskPayload.priority = newPriority === 'N/A' ? null : newPriority;
     taskPayload.dri = newDri;
     taskPayload.dueDate = newDeadline;
 
     try {
         const stageSelect = modalRoot.querySelector('#sl-xvt');
-        const stageVal = stageSelect ? stageSelect.value : (taskPayload.stageId || (taskPayload.stage && taskPayload.stage.id) || null);
+        const stageVal = stageSelect
+            ? stageSelect.value
+            : taskPayload.stageId || (taskPayload.stage && taskPayload.stage.id) || null;
         let newStageId = null;
-        if (stageVal !== null && stageVal !== undefined && String(stageVal).trim() !== '' && stageVal !== 'N/A' && stageVal !== '-') {
+        if (
+            stageVal !== null &&
+            stageVal !== undefined &&
+            String(stageVal).trim() !== '' &&
+            stageVal !== 'N/A' &&
+            stageVal !== '-'
+        ) {
             const parsed = Number(stageVal);
             newStageId = isNaN(parsed) ? null : parsed;
         }
@@ -2268,9 +2424,17 @@ async function saveTaskDetailChanges() {
 
     try {
         const typeSelect = modalRoot.querySelector('#sl-type');
-        const typeVal = typeSelect ? typeSelect.value : (taskPayload.processId || (taskPayload.process && taskPayload.process.id) || null);
+        const typeVal = typeSelect
+            ? typeSelect.value
+            : taskPayload.processId || (taskPayload.process && taskPayload.process.id) || null;
         let newProcessId = null;
-        if (typeVal !== null && typeVal !== undefined && String(typeVal).trim() !== '' && typeVal !== 'N/A' && typeVal !== '-') {
+        if (
+            typeVal !== null &&
+            typeVal !== undefined &&
+            String(typeVal).trim() !== '' &&
+            typeVal !== 'N/A' &&
+            typeVal !== '-'
+        ) {
             const parsedType = Number(typeVal);
             newProcessId = isNaN(parsedType) ? null : parsedType;
         }
@@ -2282,8 +2446,8 @@ async function saveTaskDetailChanges() {
     try {
         const res = await fetch('/sample-system/api/tasks/update', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(taskPayload)
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(taskPayload),
         });
 
         if (!res.ok) {
@@ -2294,15 +2458,19 @@ async function saveTaskDetailChanges() {
         }
 
         let json = null;
-        try { json = await res.json(); } catch (e) { /* ignore parse */ }
+        try {
+            json = await res.json();
+        } catch (e) {
+            /* ignore parse */
+        }
         const updatedTask = (json && (json.data || json.result)) || taskPayload;
 
         if (projectId && projectList && Array.isArray(projectList)) {
-            const proj = projectList.find(p => String(p.id) === String(projectId));
+            const proj = projectList.find((p) => String(p.id) === String(projectId));
             if (proj && Array.isArray(proj.tasks)) {
-                const idx = proj.tasks.findIndex(t => String(t.id) === String(taskId));
+                const idx = proj.tasks.findIndex((t) => String(t.id) === String(taskId));
                 if (idx !== -1) {
-                    proj.tasks[idx] = { ...proj.tasks[idx], ...updatedTask };
+                    proj.tasks[idx] = {...proj.tasks[idx], ...updatedTask};
                 }
             }
         }
@@ -2311,23 +2479,32 @@ async function saveTaskDetailChanges() {
             const statusBadge = modalRoot.querySelector('.task-status-badge');
             const priorityBadge = modalRoot.querySelector('.priority-badge');
             if (statusBadge) statusBadge.textContent = updatedTask.status || '';
-            if (priorityBadge) priorityBadge.textContent = (updatedTask.priority === 0 ? '0' : (updatedTask.priority || ''));
+            if (priorityBadge)
+                priorityBadge.textContent = updatedTask.priority === 0 ? '0' : updatedTask.priority || '';
             if (statusSelect) statusSelect.value = updatedTask.status || (updatedTask.status === null ? 'N/A' : '');
-            if (prioritySelect) prioritySelect.value = updatedTask.priority || (updatedTask.priority === null ? 'N/A' : '');
-        } catch (e) { console.warn('Failed to refresh badges after update', e); }
+            if (prioritySelect)
+                prioritySelect.value = updatedTask.priority || (updatedTask.priority === null ? 'N/A' : '');
+        } catch (e) {
+            console.warn('Failed to refresh badges after update', e);
+        }
 
         try {
             safeHideModal(modalRoot);
         } catch (e) {
-            try { bootstrap.Modal.getInstance(modalRoot).hide(); } catch (err) { modalRoot.classList.remove('active'); }
+            try {
+                bootstrap.Modal.getInstance(modalRoot).hide();
+            } catch (err) {
+                modalRoot.classList.remove('active');
+            }
         }
 
         showAlertSuccess('Success', 'Task updated successfully');
 
         try {
             if (projectId) showProjectTasksModal(projectId);
-        } catch (e) { /* ignore */ }
-
+        } catch (e) {
+            /* ignore */
+        }
     } catch (e) {
         console.error('Failed to call update API', e);
         showAlertError('Failed', 'Failed to update task: ' + e.message);
@@ -2339,13 +2516,19 @@ window.saveTaskDetailChanges = saveTaskDetailChanges;
 async function saveProjectTaskQuantity() {
     const pidEl = getEl('pt_detail_projectId');
     let project = null;
-    if (pidEl && pidEl.value) project = projectList.find(p => String(p.id) === String(pidEl.value));
+    if (pidEl && pidEl.value) project = projectList.find((p) => String(p.id) === String(pidEl.value));
     if (!project) {
         const projName = getEl('pt_detail_projectName') ? getElValue(getEl('pt_detail_projectName')) : null;
-        if (!projName) { showAlertError('Error', 'Project not found'); return; }
-        project = projectList.find(p => p.name === projName);
+        if (!projName) {
+            showAlertError('Error', 'Project not found');
+            return;
+        }
+        project = projectList.find((p) => p.name === projName);
     }
-    if (!project) { showAlertError('Error', 'Project not found'); return; }
+    if (!project) {
+        showAlertError('Error', 'Project not found');
+        return;
+    }
 
     const dCustomer = getEl('pt_detail_customer');
     const dProject = getEl('pt_detail_projectName');
@@ -2365,7 +2548,7 @@ async function saveProjectTaskQuantity() {
 
     try {
         const taskIds = Array.isArray(project.tasks)
-            ? project.tasks.map(item => String(item.id)).filter(id => id && String(id).trim() !== '')
+            ? project.tasks.map((item) => String(item.id)).filter((id) => id && String(id).trim() !== '')
             : [];
 
         if (taskIds.length > 0) {
@@ -2413,11 +2596,14 @@ function showAddTaskModal(projectId) {
         if (pidEl && pidEl.value) pid = pidEl.value;
         else {
             const projName = getEl('pt_detail_projectName') ? getElValue(getEl('pt_detail_projectName')) : null;
-            const p = projectList.find(pp => pp.name === projName);
+            const p = projectList.find((pp) => pp.name === projName);
             pid = p ? p.id : null;
         }
     }
-    if (!pid) { showAlertError('Error', 'Project not found'); return; }
+    if (!pid) {
+        showAlertError('Error', 'Project not found');
+        return;
+    }
 
     getEl('editTaskProjectId').value = pid;
     getEl('editTaskId').value = '';
@@ -2427,19 +2613,23 @@ function showAddTaskModal(projectId) {
     getEl('editTaskStatus').value = '';
     getEl('editTaskPriority').value = '';
 
-    try { new bootstrap.Modal(document.getElementById('editTaskModal')).show(); }
-    catch (e) { const el = document.getElementById('editTaskModal'); if (el) el.classList.add('active'); }
+    try {
+        new bootstrap.Modal(document.getElementById('editTaskModal')).show();
+    } catch (e) {
+        const el = document.getElementById('editTaskModal');
+        if (el) el.classList.add('active');
+    }
 }
 
 async function removeTaskFromProject(projectId, taskId) {
-    const project = projectList.find(p => String(p.id) === String(projectId));
+    const project = projectList.find((p) => String(p.id) === String(projectId));
     if (!project) return;
 
     if (!confirm('Bạn có chắc muốn xóa task này?')) return;
 
     try {
         const res = await fetch(`/sample-system/api/tasks/delete?id=${encodeURIComponent(taskId)}`, {
-            method: 'POST'
+            method: 'POST',
         });
 
         if (!res.ok) {
@@ -2447,25 +2637,26 @@ async function removeTaskFromProject(projectId, taskId) {
             try {
                 const text = await res.text();
                 console.warn('Response body:', text);
-            } catch (e) { }
+            } catch (e) {}
             showAlertError('Failed', 'Failed to delete task.');
             return;
         }
 
         let json = null;
-        try { json = await res.json(); } catch (e) { }
+        try {
+            json = await res.json();
+        } catch (e) {}
 
-        const serverOk = json ? (json.status === 'OK' || json.success === true || json.result === 'OK') : true;
+        const serverOk = json ? json.status === 'OK' || json.success === true || json.result === 'OK' : true;
         if (!serverOk) {
             showAlertError('Failed', 'Server reported failure when deleting task.');
             return;
         }
 
-        project.tasks = (project.tasks || []).filter(t => String(t.id) !== String(taskId));
+        project.tasks = (project.tasks || []).filter((t) => String(t.id) !== String(taskId));
         project.taskCount = project.tasks.length;
 
         renderProjectTasksContent(project.tasks, projectId);
-
     } catch (e) {
         console.error('Error', e);
         showAlertError('Error', 'Error while deleting task. See console for details.');
@@ -2487,7 +2678,7 @@ async function projectTasksSubmit() {
 
     try {
         const res = await fetch(`/sample-system/api/projects/submit?id=${projectId}`, {
-            method: 'POST'
+            method: 'POST',
         });
 
         if (!res.ok) {
@@ -2495,16 +2686,20 @@ async function projectTasksSubmit() {
         }
 
         let json = null;
-        try { json = await res.json(); } catch (e) { /* ignore */ }
+        try {
+            json = await res.json();
+        } catch (e) {
+            /* ignore */
+        }
 
-        const success = json ? (json.status === 'OK' || json.success === true) : true;
+        const success = json ? json.status === 'OK' || json.success === true : true;
 
         if (!success) {
             showAlertError('Failed', 'Server reported failure when submitting project');
             return;
         }
 
-        const project = projectList.find(p => String(p.id) === String(projectId));
+        const project = projectList.find((p) => String(p.id) === String(projectId));
         if (project) {
             project.status = 'submitted';
             loadProjectList();
@@ -2518,7 +2713,6 @@ async function projectTasksSubmit() {
         }
 
         showAlertSuccess('Success', 'Project submitted successfully');
-
     } catch (e) {
         console.error('Failed to submit project:', e);
         showAlertError('Failed', 'Failed to submit project. Please try again.');
@@ -2527,13 +2721,16 @@ async function projectTasksSubmit() {
 
 function openTaskDetailFromProject(taskId) {
     const modalEl = document.getElementById('taskDetailModal');
-    if (!modalEl) { showAlertError('Error', 'Modal not found'); return; }
+    if (!modalEl) {
+        showAlertError('Error', 'Modal not found');
+        return;
+    }
 
     if (modalEl.parentElement !== document.body) document.body.appendChild(modalEl);
 
     const elems = Array.from(document.querySelectorAll('.modal, .modal-backdrop'));
     let highest = 1040;
-    elems.forEach(el => {
+    elems.forEach((el) => {
         const z = window.getComputedStyle(el).zIndex;
         const zi = parseInt(z, 10);
         if (!isNaN(zi) && zi > highest) highest = zi;
@@ -2558,11 +2755,23 @@ function openTaskDetailFromProject(taskId) {
     modalEl.addEventListener('shown.bs.modal', onShown);
 
     if (typeof window.showTaskDetail === 'function') {
-        try { window.showTaskDetail(taskId); } catch (e) { console.warn('showTaskDetail failed', e); }
+        try {
+            window.showTaskDetail(taskId);
+        } catch (e) {
+            console.warn('showTaskDetail failed', e);
+        }
     } else if (typeof window.openPermissionTask === 'function') {
-        try { window.openPermissionTask('', taskId, ''); } catch (e) { console.warn('openPermissionTask failed', e); }
+        try {
+            window.openPermissionTask('', taskId, '');
+        } catch (e) {
+            console.warn('openPermissionTask failed', e);
+        }
     } else {
-        try { new bootstrap.Modal(modalEl).show(); } catch (e) { modalEl.classList.add('active'); }
+        try {
+            new bootstrap.Modal(modalEl).show();
+        } catch (e) {
+            modalEl.classList.add('active');
+        }
     }
 }
 
@@ -2582,7 +2791,10 @@ function showCreateProjectForm() {
     currentProject = null;
     selectedPPAPItems = [];
     const metaEl = getEl('createProjectModalMeta');
-    if (metaEl) { metaEl.textContent = ''; if (metaEl.style) metaEl.style.display = 'none'; }
+    if (metaEl) {
+        metaEl.textContent = '';
+        if (metaEl.style) metaEl.style.display = 'none';
+    }
     renderSelectedTasksInModal();
 
     safeSetDisplay('createProjectStep1', 'block');
@@ -2600,7 +2812,7 @@ function showCreateProjectForm() {
     try {
         const labelEl = getEl('createProjectModalLabel');
         if (labelEl && !createModalOriginalTitleHTML) createModalOriginalTitleHTML = labelEl.innerHTML;
-    } catch (e) { }
+    } catch (e) {}
 }
 
 function cancelCreateProject() {
@@ -2628,7 +2840,10 @@ function closeCreateProjectModal() {
         console.error('Failed to close create project modal', e);
     }
     const metaEl = getEl('createProjectModalMeta');
-    if (metaEl) { metaEl.textContent = ''; if (metaEl.style) metaEl.style.display = 'none'; }
+    if (metaEl) {
+        metaEl.textContent = '';
+        if (metaEl.style) metaEl.style.display = 'none';
+    }
     resetToProjectList();
 }
 
@@ -2657,10 +2872,10 @@ async function saveProjectBasicInfoModal() {
         createdDate: created.createdAt ? created.createdAt.split(' ')[0] : new Date().toISOString().split('T')[0],
         status: created.status || 'draft',
         taskCount: 0,
-        tasks: []
+        tasks: [],
     };
 
-    const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+    const existingIndex = projectList.findIndex((p) => String(p.id) === String(currentProject.id));
     if (existingIndex !== -1) {
         projectList[existingIndex] = currentProject;
     } else {
@@ -2698,7 +2913,10 @@ function createModalBackToStep1() {
     safeSetDisplay('createNextBtn', 'inline-flex');
     safeSetDisplay('createSaveBtn', 'none');
     const metaEl = getEl('createProjectModalMeta');
-    if (metaEl) { metaEl.textContent = ''; if (metaEl.style) metaEl.style.display = 'none'; }
+    if (metaEl) {
+        metaEl.textContent = '';
+        if (metaEl.style) metaEl.style.display = 'none';
+    }
     const labelEl = getEl('createProjectModalLabel');
     if (labelEl && createModalOriginalTitleHTML) labelEl.innerHTML = createModalOriginalTitleHTML;
 }
@@ -2713,7 +2931,7 @@ async function submitProjectFromModal() {
         return;
     }
 
-    const taskIds = selectedPPAPItems.map(item => String(item.id)).filter(id => id && String(id).trim() !== '');
+    const taskIds = selectedPPAPItems.map((item) => String(item.id)).filter((id) => id && String(id).trim() !== '');
 
     try {
         const resolvedId = await ensureProjectPersisted(currentProject);
@@ -2732,18 +2950,20 @@ async function submitProjectFromModal() {
         currentProject.tasks = selectedPPAPItems.slice();
         currentProject.taskCount = selectedPPAPItems.length;
 
-        const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+        const existingIndex = projectList.findIndex((p) => String(p.id) === String(currentProject.id));
         if (existingIndex !== -1) {
             projectList[existingIndex] = currentProject;
         } else {
             projectList.push(currentProject);
         }
 
-        showAlertSuccess('Success', `Project "${currentProject.name}" saved successfully with ${selectedPPAPItems.length} tasks.`);
+        showAlertSuccess(
+            'Success',
+            `Project "${currentProject.name}" saved successfully with ${selectedPPAPItems.length} tasks.`
+        );
 
         closeCreateProjectModal();
         await loadProjectList();
-
     } catch (e) {
         console.error('Failed to submit project:', e);
         showAlertError('Failed', 'Failed to submit project. Please try again.');
@@ -2798,12 +3018,13 @@ function renderSelectedTasksInModal() {
             <tbody>
     `;
 
-    const rows = selectedPPAPItems.map(item => {
-        const projectText = currentProject ? (currentProject.customer || '') : '';
-        const stage = item.stage || '';
-        const dri = item.dri || '';
-        const deadline = item.deadline || '';
-        return `
+    const rows = selectedPPAPItems
+        .map((item) => {
+            const projectText = currentProject ? currentProject.customer || '' : '';
+            const stage = item.stage || '';
+            const dri = item.dri || '';
+            const deadline = item.deadline || '';
+            return `
             <tr draggable="true" data-task-id="${item.id}">
                 <td class="task-id-cell">${item.id}</td>
                 <td>${item.name || ''}</td>
@@ -2813,10 +3034,13 @@ function renderSelectedTasksInModal() {
                 <td>${item.priority || ''}</td>
                 <td>${dri}</td>
                 <td>${deadline}</td>
-                <td style="text-align:center"><button class="action-btn-sm" onclick="removeSelectedTask('${item.id}')" title="Remove"><i class="bi bi-trash"></i></button></td>
+                <td style="text-align:center"><button class="action-btn-sm" onclick="removeSelectedTask('${
+                    item.id
+                }')" title="Remove"><i class="bi bi-trash"></i></button></td>
             </tr>
         `;
-    }).join('');
+        })
+        .join('');
 
     const footer = `
             </tbody>
@@ -2828,13 +3052,13 @@ function renderSelectedTasksInModal() {
 }
 
 function removeSelectedTask(taskId) {
-    selectedPPAPItems = selectedPPAPItems.filter(t => String(t.id) !== String(taskId));
+    selectedPPAPItems = selectedPPAPItems.filter((t) => String(t.id) !== String(taskId));
     renderSelectedTasksInModal();
 }
 
 function initSelectedTasksDragAndDrop() {
     const rows = document.querySelectorAll('#selectedTasksTable tbody tr');
-    rows.forEach(row => {
+    rows.forEach((row) => {
         row.removeEventListener('dragstart', handleTaskDragStart);
         row.removeEventListener('dragover', handleTaskDragOver);
         row.removeEventListener('drop', handleTaskDrop);
@@ -2882,19 +3106,27 @@ function handleTaskDrop(e) {
     }
 
     const tbody = document.querySelector('#selectedTasksTable tbody');
-    const newOrder = Array.from(tbody.querySelectorAll('tr')).map(tr => tr.dataset.taskId);
+    const newOrder = Array.from(tbody.querySelectorAll('tr')).map((tr) => tr.dataset.taskId);
     const map = {};
-    selectedPPAPItems.forEach(item => { if (item && item.id) map[String(item.id)] = item; });
-    selectedPPAPItems = newOrder.map(id => map[String(id)]).filter(Boolean);
+    selectedPPAPItems.forEach((item) => {
+        if (item && item.id) map[String(item.id)] = item;
+    });
+    selectedPPAPItems = newOrder.map((id) => map[String(id)]).filter(Boolean);
 
-    document.querySelectorAll('#selectedTasksTable tbody tr').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
+    document.querySelectorAll('#selectedTasksTable tbody tr').forEach((r) => {
+        r.style.borderTop = '';
+        r.style.borderBottom = '';
+    });
 
     return false;
 }
 
 function handleTaskDragEnd(e) {
     this.style.opacity = '1';
-    document.querySelectorAll('#selectedTasksTable tbody tr').forEach(r => { r.style.borderTop = ''; r.style.borderBottom = ''; });
+    document.querySelectorAll('#selectedTasksTable tbody tr').forEach((r) => {
+        r.style.borderTop = '';
+        r.style.borderBottom = '';
+    });
     draggedTaskRow = null;
 }
 
@@ -2913,14 +3145,12 @@ function saveProjectBasicInfo() {
         name: name,
         createdDate: new Date().toISOString().split('T')[0],
         status: 'draft',
-        taskCount: 0
+        taskCount: 0,
     };
-
 
     safeSetDisplay('createProjectSection', 'none');
     safeSetDisplay('operationOptionsSection', 'block');
 }
-
 
 function generateProjectId() {
     return 'TEMP-' + Date.now();
@@ -2933,12 +3163,18 @@ function cancelProjectCreation() {
 }
 
 async function submitProject() {
-    if (!currentProject) { showAlertWarning('Warning', 'Please save basic project info first'); return; }
-    if (selectedPPAPItems.length === 0) { showAlertWarning('Warning', 'Please select at least one PPAP item or add a custom task'); return; }
+    if (!currentProject) {
+        showAlertWarning('Warning', 'Please save basic project info first');
+        return;
+    }
+    if (selectedPPAPItems.length === 0) {
+        showAlertWarning('Warning', 'Please select at least one PPAP item or add a custom task');
+        return;
+    }
 
     currentProject.taskCount = selectedPPAPItems.length;
     currentProject.status = 'waiting';
-    const taskIds = selectedPPAPItems.map(item => String(item.id)).filter(id => id && String(id).trim() !== '');
+    const taskIds = selectedPPAPItems.map((item) => String(item.id)).filter((id) => id && String(id).trim() !== '');
 
     let resolvedId = null;
     if (currentProject.id && !String(currentProject.id).startsWith('TEMP-')) {
@@ -2962,27 +3198,30 @@ async function submitProject() {
         return;
     }
 
-    const existingIndex = projectList.findIndex(p => String(p.id) === String(currentProject.id));
+    const existingIndex = projectList.findIndex((p) => String(p.id) === String(currentProject.id));
     if (existingIndex !== -1) {
         projectList[existingIndex] = currentProject;
     } else {
         projectList.push(currentProject);
     }
 
-    showAlertSuccess('Success', `Project "${currentProject.name}" saved successfully, containing ${currentProject.taskCount} tasks`);
+    showAlertSuccess(
+        'Success',
+        `Project "${currentProject.name}" saved successfully, containing ${currentProject.taskCount} tasks`
+    );
     resetToProjectList();
     await loadProjectList();
 }
 
 async function showStandardPPAP() {
-    const modal = document.getElementById("standardPPAPModal");
-    const grid = document.getElementById("ppapTasksGrid");
+    const modal = document.getElementById('standardPPAPModal');
+    const grid = document.getElementById('ppapTasksGrid');
 
     if (grid) grid.innerHTML = '<div class="ppap-loading">載入中...</div>';
 
     const pidEl = getEl('pt_detail_projectId');
     if (pidEl && pidEl.value) {
-        const project = projectList.find(p => String(p.id) === String(pidEl.value));
+        const project = projectList.find((p) => String(p.id) === String(pidEl.value));
         if (project && Array.isArray(project.tasks) && project.tasks.length > 0) {
             selectedPPAPItems = project.tasks.slice();
         }
@@ -2990,41 +3229,45 @@ async function showStandardPPAP() {
 
     const preservedIds = new Set();
     try {
-        (selectedPPAPItems || []).forEach(i => {
+        (selectedPPAPItems || []).forEach((i) => {
             if (!i) return;
             if (i.id != null) preservedIds.add(String(i.id));
             if (i.parentId != null) preservedIds.add(String(i.parentId));
         });
 
-        if (currentProject && Array.isArray(currentProject.tasks)) currentProject.tasks.forEach(i => {
-            if (!i) return;
-            if (i.id != null) preservedIds.add(String(i.id));
-            if (i.parentId != null) preservedIds.add(String(i.parentId));
-        });
-
-        if (pidEl && pidEl.value) {
-            const project = projectList.find(p => String(p.id) === String(pidEl.value));
-            if (project && Array.isArray(project.tasks)) project.tasks.forEach(i => {
+        if (currentProject && Array.isArray(currentProject.tasks))
+            currentProject.tasks.forEach((i) => {
                 if (!i) return;
                 if (i.id != null) preservedIds.add(String(i.id));
                 if (i.parentId != null) preservedIds.add(String(i.parentId));
             });
+
+        if (pidEl && pidEl.value) {
+            const project = projectList.find((p) => String(p.id) === String(pidEl.value));
+            if (project && Array.isArray(project.tasks))
+                project.tasks.forEach((i) => {
+                    if (!i) return;
+                    if (i.id != null) preservedIds.add(String(i.id));
+                    if (i.parentId != null) preservedIds.add(String(i.parentId));
+                });
         }
-    } catch (e) { console.warn('Error', e); }
+    } catch (e) {
+        console.warn('Error', e);
+    }
 
     let tasks = [];
     try {
         const res = await fetch('/sample-system/api/tasks/templates');
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const json = await res.json();
-        tasks = Array.isArray(json.data) ? json.data : (Array.isArray(json) ? json : []);
-        tasks = tasks.map(item => ({
+        tasks = Array.isArray(json.data) ? json.data : Array.isArray(json) ? json : [];
+        tasks = tasks.map((item) => ({
             id: item.id,
             taskCode: item.taskCode || '',
             name: item.name || '',
             description: item.description || '',
             status: item.status || '',
-            priority: item.priority || ''
+            priority: item.priority || '',
         }));
     } catch (e) {
         console.warn('Failed to fetch PPAP templates, falling back to local list:', e);
@@ -3035,11 +3278,12 @@ async function showStandardPPAP() {
         const originalTasks = Array.isArray(tasks) ? tasks.slice() : [];
 
         function renderTaskList(list) {
-            grid.innerHTML = (Array.isArray(list) ? list : []).map((task) => {
-                const isChecked = preservedIds.has(String(task.id)) ? 'checked' : '';
-                const status = task.status || '';
-                const priority = task.priority || '';
-                return `
+            grid.innerHTML = (Array.isArray(list) ? list : [])
+                .map((task) => {
+                    const isChecked = preservedIds.has(String(task.id)) ? 'checked' : '';
+                    const status = task.status || '';
+                    const priority = task.priority || '';
+                    return `
                     <div class="ppap-task-card">
                         <label>
                             <input type="checkbox" class="ppap-checkbox" value="${task.id}" data-status="${status}" data-priority="${priority}" ${isChecked}>
@@ -3051,11 +3295,12 @@ async function showStandardPPAP() {
                         </label>
                     </div>
                 `;
-            }).join("");
+                })
+                .join('');
 
             try {
                 const boxes = grid.querySelectorAll('.ppap-checkbox');
-                boxes.forEach(cb => cb.addEventListener('change', handlePPAPCheckboxChange));
+                boxes.forEach((cb) => cb.addEventListener('change', handlePPAPCheckboxChange));
             } catch (e) {
                 console.warn('Failed to attach PPAP checkbox listeners', e);
             }
@@ -3073,16 +3318,16 @@ async function showStandardPPAP() {
                 input.value = '';
 
                 const listener = function (ev) {
-                    const q = (ev && ev.target && ev.target.value) ? String(ev.target.value).trim().toLowerCase() : '';
+                    const q = ev && ev.target && ev.target.value ? String(ev.target.value).trim().toLowerCase() : '';
                     if (!q) {
                         renderTaskList(originalTasks);
                         return;
                     }
 
-                    const filtered = originalTasks.filter(t => {
+                    const filtered = originalTasks.filter((t) => {
                         const n = (t.name || '').toString().toLowerCase();
                         const d = (t.description || '').toString().toLowerCase();
-                        return (n.indexOf(q) !== -1) || (d.indexOf(q) !== -1);
+                        return n.indexOf(q) !== -1 || d.indexOf(q) !== -1;
                     });
                     renderTaskList(filtered);
                 };
@@ -3104,7 +3349,7 @@ async function showStandardPPAP() {
 }
 
 function closeStandardPPAP() {
-    var modalEl = document.getElementById("standardPPAPModal");
+    var modalEl = document.getElementById('standardPPAPModal');
     var bsModal = bootstrap.Modal.getInstance(modalEl);
     if (bsModal) bsModal.hide();
 }
@@ -3115,7 +3360,7 @@ function openModalAbove(modalRef) {
 
     const shown = Array.from(document.querySelectorAll('.modal.show'));
     let topZ = 1040;
-    shown.forEach(m => {
+    shown.forEach((m) => {
         const z = parseInt(window.getComputedStyle(m).zIndex, 10);
         if (!isNaN(z) && z > topZ) topZ = z;
     });
@@ -3138,11 +3383,17 @@ function openModalAbove(modalRef) {
 }
 
 function selectAllPPAP() {
-    document.querySelectorAll(".ppap-checkbox").forEach((cb) => { cb.checked = true; cb.dispatchEvent(new Event('change')); });
+    document.querySelectorAll('.ppap-checkbox').forEach((cb) => {
+        cb.checked = true;
+        cb.dispatchEvent(new Event('change'));
+    });
 }
 
 function deselectAllPPAP() {
-    document.querySelectorAll(".ppap-checkbox").forEach((cb) => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
+    document.querySelectorAll('.ppap-checkbox').forEach((cb) => {
+        cb.checked = false;
+        cb.dispatchEvent(new Event('change'));
+    });
 }
 
 function handlePPAPCheckboxChange(e) {
@@ -3158,7 +3409,7 @@ function handlePPAPCheckboxChange(e) {
     const priority = cb.dataset.priority || '';
 
     const map = {};
-    (selectedPPAPItems || []).forEach(i => {
+    (selectedPPAPItems || []).forEach((i) => {
         if (i && i.id) map[String(i.id)] = i;
     });
 
@@ -3169,7 +3420,7 @@ function handlePPAPCheckboxChange(e) {
         description: descEl ? descEl.textContent.trim() : '',
         status: status,
         priority: priority,
-        step: Object.keys(map).length + 1
+        step: Object.keys(map).length + 1,
     };
 
     if (cb.checked) {
@@ -3192,21 +3443,14 @@ function handlePPAPCheckboxChange(e) {
 }
 
 function confirmPPAPSelection() {
-    const checked = Array.from(document.querySelectorAll(".ppap-checkbox:checked"));
+    const checked = Array.from(document.querySelectorAll('.ppap-checkbox:checked'));
 
     if (checked.length === 0) {
         showAlertWarning('Warning', 'Please select at least one PPAP item');
         return;
     }
 
-    // Build a map of existing tasks to preserve them
-    const existingTaskMap = {};
-    (selectedPPAPItems || []).forEach(task => {
-        if (task && task.id) existingTaskMap[String(task.id)] = task;
-    });
-
-    // Get newly checked items from the modal
-    const newSelections = checked.map(cb => {
+    selectedPPAPItems = checked.map((cb) => {
         const card = cb.closest('.ppap-task-card');
         const info = card ? card.querySelector('.ppap-task-info') : null;
         const nameEl = info ? info.querySelector('.ppap-task-name') : null;
@@ -3220,24 +3464,11 @@ function confirmPPAPSelection() {
             name: nameEl ? nameEl.textContent.trim() : cb.value,
             description: descEl ? descEl.textContent.trim() : '',
             status: status,
-            priority: priority
+            priority: priority,
         };
     });
 
-    // Merge: add new selections to existing map (preserves existing tasks)
-    newSelections.forEach(task => {
-        existingTaskMap[String(task.id)] = task;
-    });
-
-    // Convert map back to array
-    selectedPPAPItems = Object.values(existingTaskMap);
-
-    // Recalculate step numbers
-    selectedPPAPItems.forEach((task, idx) => {
-        if (task) task.step = idx + 1;
-    });
-
-    showAlertSuccess('Success', `Total ${selectedPPAPItems.length} tasks selected`);
+    showAlertSuccess('Success', `Selected ${selectedPPAPItems.length} PPAP items`);
 
     renderSelectedTasksInModal();
 
@@ -3245,7 +3476,7 @@ function confirmPPAPSelection() {
     if (projectTasksModal && projectTasksModal.classList.contains('show')) {
         const pidEl = getEl('pt_detail_projectId');
         if (pidEl && pidEl.value) {
-            const project = projectList.find(p => String(p.id) === String(pidEl.value));
+            const project = projectList.find((p) => String(p.id) === String(pidEl.value));
             if (project) {
                 project.tasks = selectedPPAPItems.slice();
                 project.taskCount = selectedPPAPItems.length;
@@ -3262,30 +3493,36 @@ function confirmPPAPSelection() {
     }
 }
 
-
 async function showCustomTask() {
-    var modal = document.getElementById("customTaskModal");
+    var modal = document.getElementById('customTaskModal');
     try {
         await loadCustomTaskSelects();
         const bs = openModalAbove(modal);
-        try { 
+        try {
             setTimeout(() => {
                 initDeadlinePicker();
                 initCustomDriSelect2();
-            }, 60); 
-        } catch (e) { }
+            }, 60);
+        } catch (e) {}
     } catch (e) {
         console.error(e);
-        try { if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } } catch (err) { /* ignore */ }
+        try {
+            if (modal) {
+                var mm = new bootstrap.Modal(modal);
+                mm.show();
+            }
+        } catch (err) {
+            /* ignore */
+        }
     }
 }
 
 async function loadCustomTaskSelects() {
     try {
-        const departments = SELECT_CACHE['/api/departments'] || await fetchOptions('/api/departments');
-        const processes = SELECT_CACHE['/api/processes'] || await fetchOptions('/api/processes');
-        const priorities = SELECT_CACHE['/api/tasks/priorities'] || await fetchOptions('/api/tasks/priorities');
-        const stages = SELECT_CACHE['/api/stages'] || await fetchOptions('/api/stages');
+        const departments = SELECT_CACHE['/api/departments'] || (await fetchOptions('/api/departments'));
+        const processes = SELECT_CACHE['/api/processes'] || (await fetchOptions('/api/processes'));
+        const priorities = SELECT_CACHE['/api/tasks/priorities'] || (await fetchOptions('/api/tasks/priorities'));
+        const stages = SELECT_CACHE['/api/stages'] || (await fetchOptions('/api/stages'));
 
         SELECT_CACHE['/api/departments'] = departments;
         SELECT_CACHE['/api/processes'] = processes;
@@ -3302,55 +3539,242 @@ async function loadCustomTaskSelects() {
 }
 
 function closeCustomTask() {
-    var modalEl = document.getElementById("customTaskModal");
+    var modalEl = document.getElementById('customTaskModal');
     var bsModal = bootstrap.Modal.getInstance(modalEl);
     if (bsModal) bsModal.hide();
 }
 
-
 function showCopyTemplate() {
-    var modal = document.getElementById("copyTemplateModal");
-    try { openModalAbove(modal); } catch (e) { console.error(e); if (modal) { var mm = new bootstrap.Modal(modal); mm.show(); } }
+    var modal = document.getElementById('copyTemplateModal');
+    try {
+        openModalAbove(modal);
+    } catch (e) {
+        console.error(e);
+        if (modal) {
+            var mm = new bootstrap.Modal(modal);
+            mm.show();
+        }
+    }
 }
 
 function closeCopyTemplate() {
-    var modalEl = document.getElementById("copyTemplateModal");
+    var modalEl = document.getElementById('copyTemplateModal');
     var bsModal = bootstrap.Modal.getInstance(modalEl);
     if (bsModal) bsModal.hide();
 }
 
+function showRACIMatrix(projectId) {
+    showRACIMatrixForProject(projectId);
+}
 
-function showRACIMatrix() {
-    const modal = document.getElementById("raciMatrixModal");
-    const tbody = document.getElementById("raciMatrixBody");
+function showRACIMatrixFromProject() {
+    const projectIdEl = document.getElementById('pt_detail_projectId');
+    if (!projectIdEl || !projectIdEl.value) {
+        showAlertError('Error', 'Project ID not found');
+        return;
+    }
+    showRACIMatrixForProject(projectIdEl.value);
+}
 
-    tbody.innerHTML = raciMatrixData.map((row) => `
-        <tr>
-            <td>${row.task}</td>
-            ${Object.entries(row.departments).map(([dept, role]) => `
-                <td><span class="raci-cell raci-badge raci-${role.toLowerCase()}">${role}</span></td>
-            `).join("")}
-        </tr>
-    `).join("");
+// Store RACI data globally for editing
+let currentRACIData = {};
+let currentRACIProjectId = null;
+const RACI_EMPTY_PLACEHOLDER = '<span class="raci-cell raci-empty"></span>';
+
+async function showRACIMatrixForProject(projectId) {
+    if (!projectId || projectId === 'null' || projectId === 'undefined') {
+        showAlertWarning('Warning', 'Invalid project ID');
+        return;
+    }
+
+    const modal = document.getElementById('raciMatrixModal');
+    const thead = modal.querySelector('thead tr');
+    const tbody = document.getElementById('raciMatrixBody');
 
     try {
+        loader.load();
+
+        currentRACIProjectId = projectId;
+
+        const departments = SELECT_CACHE['/api/departments'] || [];
+        if (departments.length === 0) {
+            const deptRes = await fetch('/sample-system/api/departments');
+            if (deptRes.ok) {
+                const deptJson = await deptRes.json();
+                SELECT_CACHE['/api/departments'] = deptJson.data || [];
+                departments.push(...SELECT_CACHE['/api/departments']);
+            }
+        }
+
+        const tasksRes = await fetch(`/sample-system/api/project/${projectId}/tasks`);
+        if (!tasksRes.ok) {
+            throw new Error(`Failed to fetch tasks: ${tasksRes.status}`);
+        }
+        const tasksJson = await tasksRes.json();
+        const tasks = tasksJson.data || [];
+
+        const raciRes = await fetch(`/sample-system/api/project/${projectId}/task-raci`);
+        if (!raciRes.ok) {
+            throw new Error(`Failed to fetch RACI data: ${raciRes.status}`);
+        }
+        const raciJson = await raciRes.json();
+        const raciData = raciJson.data || [];
+
+        currentRACIData = {};
+        raciData.forEach((raci) => {
+            const key = `${raci.taskId}_${raci.departmentId}`;
+            currentRACIData[key] = {
+                id: raci.id,
+                raci: raci.raci || '',
+                taskId: raci.taskId,
+                departmentId: raci.departmentId,
+            };
+        });
+
+        thead.innerHTML = `
+            <th style="min-width: 150px">Task</th>
+            ${departments.map((dept) => `<th style="max-width: 80px">${dept.name || dept.id}</th>`).join('')}
+        `;
+
+        tbody.innerHTML = tasks
+            .map((task) => {
+                return `
+                <tr>
+                    <td>${task.name || task.id}</td>
+                    ${departments
+                        .map((dept) => {
+                            const key = `${task.id}_${dept.id}`;
+                            const raciObj = currentRACIData[key];
+                            const raciValue = raciObj ? raciObj.raci : '';
+
+                            return `<td class="raci-editable-cell" data-task-id="${task.id}" data-dept-id="${
+                                dept.id
+                            }" style="cursor: pointer; min-height: 40px; vertical-align: middle;">
+                                ${
+                                    raciValue
+                                        ? `<span class="raci-cell raci-badge raci-${raciValue.toLowerCase()}">${raciValue}</span>`
+                                        : RACI_EMPTY_PLACEHOLDER
+                                }
+                            </td>`;
+                        })
+                        .join('')}
+                </tr>
+            `;
+            })
+            .join('');
+
+        tbody.querySelectorAll('.raci-editable-cell').forEach((cell) => {
+            cell.addEventListener('click', handleRACICellClick);
+        });
+
+        loader.unload();
+
         var bsModal = new bootstrap.Modal(modal);
         bsModal.show();
     } catch (e) {
-        console.error('Bootstrap Modal show error:', e);
-        modal.classList.add("active");
+        loader.unload();
+        console.error('Error showing RACI Matrix:', e);
+        showAlertError('Error', 'Failed to load RACI Matrix: ' + (e.message || e));
+    }
+}
+
+function handleRACICellClick(e) {
+    const cell = e.currentTarget;
+    const taskId = cell.dataset.taskId;
+    const deptId = cell.dataset.deptId;
+    const key = `${taskId}_${deptId}`;
+
+    const raciStates = ['R', 'A', 'C', 'I', ''];
+
+    const currentObj = currentRACIData[key];
+    const currentRaci = currentObj ? currentObj.raci : '';
+
+    const currentIndex = raciStates.indexOf(currentRaci);
+    const nextIndex = (currentIndex + 1) % raciStates.length;
+    const nextRaci = raciStates[nextIndex];
+
+    if (!currentRACIData[key]) {
+        currentRACIData[key] = {
+            taskId: parseInt(taskId),
+            departmentId: parseInt(deptId),
+            raci: nextRaci,
+        };
+    } else {
+        currentRACIData[key].raci = nextRaci;
+    }
+
+    if (nextRaci) {
+        cell.innerHTML = `<span class="raci-cell raci-badge raci-${nextRaci.toLowerCase()}">${nextRaci}</span>`;
+    } else {
+        cell.innerHTML = RACI_EMPTY_PLACEHOLDER;
     }
 }
 
 function closeRACIMatrix() {
     try {
-        var modalEl = document.getElementById("raciMatrixModal");
+        var modalEl = document.getElementById('raciMatrixModal');
         var instance = bootstrap.Modal.getInstance(modalEl);
         if (instance) instance.hide();
-        else modalEl.classList.remove("active");
+        else modalEl.classList.remove('active');
     } catch (e) {
         console.error('Bootstrap Modal hide error:', e);
-        document.getElementById("raciMatrixModal").classList.remove("active");
+        document.getElementById('raciMatrixModal').classList.remove('active');
+    }
+}
+
+function saveRACIMatrix() {
+    if (!currentRACIProjectId) {
+        showAlertError('Error', 'Project ID not found');
+        return;
+    }
+
+    try {
+        loader.load();
+        const raciItems = [];
+        Object.values(currentRACIData).forEach((item) => {
+            if (item.raci && item.raci.trim() !== '') {
+                const raciItem = {
+                    departmentId: item.departmentId,
+                    taskId: item.taskId,
+                    raci: item.raci,
+                    flag: null,
+                };
+
+                if (item.id) {
+                    raciItem.id = item.id;
+                }
+
+                raciItems.push(raciItem);
+            }
+        });
+
+        fetch('/sample-system/api/task-raci/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(raciItems),
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Failed to save RACI: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then((result) => {
+                loader.unload();
+                showAlertSuccess('Success', 'RACI Matrix saved successfully');
+                closeRACIMatrix();
+            })
+            .catch((error) => {
+                loader.unload();
+                console.error('Error saving RACI Matrix:', error);
+                showAlertError('Error', 'Failed to save RACI Matrix: ' + (error.message || error));
+            });
+    } catch (e) {
+        loader.unload();
+        console.error('Error in saveRACIMatrix:', e);
+        showAlertError('Error', 'Failed to save RACI Matrix');
     }
 }
 
@@ -3359,7 +3783,7 @@ async function approveProject(projectId) {
 
     try {
         const res = await fetch('/sample-system/api/projects/approve?id=' + encodeURIComponent(projectId), {
-            method: 'POST'
+            method: 'POST',
         });
 
         if (!res.ok) {
@@ -3369,10 +3793,18 @@ async function approveProject(projectId) {
         }
 
         showAlertSuccess('Approved', 'Project approved successfully');
-        const project = projectList.find(p => String(p.id) === String(projectId));
+        const project = projectList.find((p) => String(p.id) === String(projectId));
         if (project) project.status = 'approved';
         await loadProjectList();
-        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch (e) { /* ignore */ }
+        try {
+            if (
+                document.getElementById('projectTasksModal') &&
+                bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))
+            )
+                bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide();
+        } catch (e) {
+            /* ignore */
+        }
     } catch (e) {
         console.error('Approve API error', e);
         showAlertError('Failed', 'Failed to call approve API: ' + (e && e.message ? e.message : e));
@@ -3384,7 +3816,7 @@ async function rejectProject(projectId) {
 
     try {
         const res = await fetch('/sample-system/api/projects/return?id=' + encodeURIComponent(projectId), {
-            method: 'POST'
+            method: 'POST',
         });
 
         if (!res.ok) {
@@ -3394,20 +3826,26 @@ async function rejectProject(projectId) {
         }
 
         showAlertWarning('Rejected', 'Project has been returned/rejected');
-        const project = projectList.find(p => String(p.id) === String(projectId));
+        const project = projectList.find((p) => String(p.id) === String(projectId));
         if (project) project.status = 'rejected';
         await loadProjectList();
-        try { if (document.getElementById('projectTasksModal') && bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))) bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide(); } catch (e) { /* ignore */ }
+        try {
+            if (
+                document.getElementById('projectTasksModal') &&
+                bootstrap.Modal.getInstance(document.getElementById('projectTasksModal'))
+            )
+                bootstrap.Modal.getInstance(document.getElementById('projectTasksModal')).hide();
+        } catch (e) {
+            /* ignore */
+        }
     } catch (e) {
         console.error('Return API error', e);
         showAlertError('Failed', 'Failed to call return API: ' + (e && e.message ? e.message : e));
     }
 }
 
-
-
 async function deleteProject(projectId) {
-    const project = projectList.find(p => String(p.id) === String(projectId));
+    const project = projectList.find((p) => String(p.id) === String(projectId));
     if (!project) {
         console.warn('deleteProject: project not found for id', projectId);
         return;
@@ -3423,7 +3861,7 @@ async function deleteProject(projectId) {
         }
 
         const url = `/sample-system/api/projects/delete?id=${encodeURIComponent(bodyId)}`;
-        const res = await fetch(url, { method: 'POST' });
+        const res = await fetch(url, {method: 'POST'});
 
         console.debug('deleteProject: response status', res.status, res.statusText);
 
@@ -3437,16 +3875,15 @@ async function deleteProject(projectId) {
             const json = await res.json();
             console.debug('deleteProject: response json', json);
             if (json && (json.status === 'ERROR' || json.success === false)) ok = false;
-        } catch (e) { }
+        } catch (e) {}
 
         if (!ok) {
             return;
         }
 
-        projectList = projectList.filter(p => String(p.id) !== String(projectId));
+        projectList = projectList.filter((p) => String(p.id) !== String(projectId));
         showAlertSuccess('Success', `Project "${project.name}" has been deleted`);
         await loadProjectList();
-
     } catch (e) {
         console.error('Failed to delete project:', e);
         showAlertError('Failed', 'Failed to delete project. Please try again.');
@@ -3463,23 +3900,33 @@ function initDeadlinePicker() {
         try {
             const raw = String(el.value || '').trim();
             if (raw === '-' || raw.toUpperCase() === 'N/A') el.value = '';
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+            /* ignore */
+        }
 
         try {
             if (window.jQuery && $(el).data('daterangepicker')) {
-                try { $(el).data('daterangepicker').remove(); } catch (err) { }
-                try { $(el).off('apply.daterangepicker cancel.daterangepicker'); } catch (err) { }
+                try {
+                    $(el).data('daterangepicker').remove();
+                } catch (err) {}
+                try {
+                    $(el).off('apply.daterangepicker cancel.daterangepicker');
+                } catch (err) {}
             }
-        } catch (e) { }
+        } catch (e) {}
 
         try {
             if (el._flatpickr) {
-                try { el._flatpickr.destroy(); } catch (err) { }
+                try {
+                    el._flatpickr.destroy();
+                } catch (err) {}
             }
-        } catch (e) { }
+        } catch (e) {}
 
         if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
-            try { el.type = 'text'; } catch (e) { }
+            try {
+                el.type = 'text';
+            } catch (e) {}
 
             const currentValue = el.value || '';
             singlePicker($(el), currentValue);
@@ -3493,16 +3940,22 @@ function initDeadlinePicker() {
             });
 
             $(el).on('cancel.daterangepicker', function () {
-                try { $(this).val(''); } catch (err) { }
+                try {
+                    $(this).val('');
+                } catch (err) {}
             });
 
             return;
         }
 
-        try { el.type = 'date'; } catch (e) { }
+        try {
+            el.type = 'date';
+        } catch (e) {}
 
         el.addEventListener('focus', function onFocus() {
-            try { el.type = 'datetime-local'; } catch (e) { }
+            try {
+                el.type = 'datetime-local';
+            } catch (e) {}
             el.removeEventListener('focus', onFocus);
         });
     });
@@ -3541,7 +3994,7 @@ async function urlProject() {
         const maxRetries = 20;
 
         while ((!projectList || projectList.length === 0) && retries < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             retries++;
         }
 
@@ -3552,7 +4005,6 @@ async function urlProject() {
         }
 
         await showProjectTasksModal(projectId);
-
     } catch (e) {
         console.error('urlProject error:', e);
     }
@@ -3567,7 +4019,7 @@ async function urlTask() {
         const maxRetries = 20;
 
         while ((!projectList || projectList.length === 0) && retries < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             retries++;
         }
 
@@ -3590,7 +4042,6 @@ async function urlTask() {
         const projectId = task.projectId || task.project_id || task.project_id_fk || null;
 
         await showTaskDetailModal(projectId, taskId);
-
     } catch (e) {
         console.error('urlTask error:', e);
         try {
@@ -3625,16 +4076,22 @@ function filterProjectTasksByName(query) {
         const rows = Array.from(tbody.querySelectorAll('tr'));
 
         if (!q) {
-            rows.forEach(r => { r.style.display = ''; });
+            rows.forEach((r) => {
+                r.style.display = '';
+            });
             return;
         }
 
-        rows.forEach(row => {
+        rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
             const taskNumberCell = cells && cells.length >= 3 ? cells[2] : null;
             const taskNameCell = cells && cells.length >= 4 ? cells[3] : null;
-            const numberText = taskNumberCell ? (taskNumberCell.textContent || taskNumberCell.innerText || '').trim().toLowerCase() : '';
-            const nameText = taskNameCell ? (taskNameCell.textContent || taskNameCell.innerText || '').trim().toLowerCase() : '';
+            const numberText = taskNumberCell
+                ? (taskNumberCell.textContent || taskNumberCell.innerText || '').trim().toLowerCase()
+                : '';
+            const nameText = taskNameCell
+                ? (taskNameCell.textContent || taskNameCell.innerText || '').trim().toLowerCase()
+                : '';
             if (numberText.indexOf(q) === -1 && nameText.indexOf(q) === -1) {
                 row.style.display = 'none';
             } else {
@@ -3647,9 +4104,6 @@ function filterProjectTasksByName(query) {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    // Show loader immediately on page load
-    try { loader.load(); } catch (e) { /* loader may not be initialized yet */ }
-
     const btn = document.getElementById('upload');
     if (btn) {
         btn.addEventListener('click', handleTaskFileUpload);
@@ -3657,30 +4111,41 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     try {
         if (window.jQuery && typeof window.jQuery.fn.daterangepicker === 'function') {
-            var input = document.querySelector("#filter-created-date");
+            var input = document.querySelector('#filter-created-date');
             if (input) {
                 try {
                     if ($(input).data('daterangepicker')) {
-                        try { $(input).data('daterangepicker').remove(); } catch (err) { }
-                        try { $(input).off('apply.daterangepicker cancel.daterangepicker'); } catch (err) { }
+                        try {
+                            $(input).data('daterangepicker').remove();
+                        } catch (err) {}
+                        try {
+                            $(input).off('apply.daterangepicker cancel.daterangepicker');
+                        } catch (err) {}
                     }
-                } catch (err) { }
+                } catch (err) {}
 
                 rangePicker($(input), null, null);
 
                 $(input).on('apply.daterangepicker', function (ev, picker) {
                     try {
-                        $(this).val(picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD'));
+                        $(this).val(
+                            picker.startDate.format('YYYY/MM/DD') + ' - ' + picker.endDate.format('YYYY/MM/DD')
+                        );
                         $(this).trigger('change');
-                    } catch (err) { }
+                    } catch (err) {}
                 });
 
                 $(input).on('cancel.daterangepicker', function () {
-                    try { $(this).val(''); $(this).trigger('change'); } catch (err) { }
+                    try {
+                        $(this).val('');
+                        $(this).trigger('change');
+                    } catch (err) {}
                 });
             }
         }
-    } catch (e) { console.warn('Failed to init created date picker:', e); }
+    } catch (e) {
+        console.warn('Failed to init created date picker:', e);
+    }
 
     const btnComment = document.getElementById('comment');
     if (btnComment) {
@@ -3702,21 +4167,24 @@ document.addEventListener('DOMContentLoaded', async function () {
             searchInput._searchHandler = debounce(function (ev) {
                 try {
                     filterProjectTasksByName(ev.target.value);
-                } catch (e) { console.warn('search-task handler error', e); }
+                } catch (e) {
+                    console.warn('search-task handler error', e);
+                }
             }, 200);
 
             searchInput.addEventListener('input', searchInput._searchHandler);
         }
-    } catch (e) { console.warn('Failed to attach search-task listener', e); }
+    } catch (e) {
+        console.warn('Failed to attach search-task listener', e);
+    }
 
     await loadAllSelects();
     await loadUsersAndInitDriSelects();
     await loadProjectList();
 
-    // Hide loader after all initial data is loaded
-    try { loader.unload(); } catch (e) { }
-
-    try { initDeadlinePicker(); } catch (e) { }
+    try {
+        initDeadlinePicker();
+    } catch (e) {}
 
     try {
         await urlTask();
@@ -3758,15 +4226,48 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     try {
         const fb = document.getElementById('filter_button');
-        if (fb) fb.addEventListener('click', function (ev) {
-            try { filterProjects(); } catch (e) { console.warn('filter_button handler error', e); }
-        });
+        if (fb)
+            fb.addEventListener('click', function (ev) {
+                try {
+                    filterProjects();
+                } catch (e) {
+                    console.warn('filter_button handler error', e);
+                }
+            });
 
         try {
             const clearBtn = document.getElementById('clear_filter_button');
-            if (clearBtn) clearBtn.addEventListener('click', function (ev) {
-                try { clearAdvancedFilters(); } catch (e) { console.warn('clear_filter_button handler error', e); }
-            });
-        } catch (e) { console.warn('Failed to attach clear_filter_button listener', e); }
-    } catch (e) { console.warn('Failed to attach filter_button listener', e); }
+            if (clearBtn)
+                clearBtn.addEventListener('click', function (ev) {
+                    try {
+                        clearAdvancedFilters();
+                    } catch (e) {
+                        console.warn('clear_filter_button handler error', e);
+                    }
+                });
+        } catch (e) {
+            console.warn('Failed to attach clear_filter_button listener', e);
+        }
+
+        try {
+            const projectSearchInput = document.getElementById('ppapFilterProject');
+            if (projectSearchInput) {
+                const handler = function (ev) {
+                    if (ev && ev.key === 'Enter') {
+                        ev.preventDefault();
+                        try {
+                            filterProjects();
+                        } catch (error) {
+                            console.warn('ppapFilterProject enter handler error', error);
+                        }
+                    }
+                };
+                projectSearchInput.addEventListener('keydown', handler);
+            }
+        } catch (e) {
+            console.warn('Failed to attach ppapFilterProject enter listener', e);
+        }
+    } catch (e) {
+        console.warn('Failed to attach filter_button listener', e);
+    }
 });
