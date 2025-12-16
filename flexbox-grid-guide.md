@@ -7,6 +7,96 @@
 4. [Layout bình thường (page có thể scroll)](#4-layout-bình-thường-page-có-thể-scroll)
 5. [Layout full-page (không scroll page)](#5-layout-full-page-không-scroll-page)
 6. [Bootstrap Flex Utilities](#6-bootstrap-flex-utilities)
+7. [Custom Classes (ppap.css)](#7-custom-classes-ppapcss)
+
+---
+
+## 0. Cách sử dụng Custom Classes với Flexbox/Grid
+
+### Bảng hướng dẫn nhanh
+
+| Custom Class | Kết hợp với | Khi nào dùng |
+|--------------|-------------|--------------|
+| `.component-wrapper.fit` | Đã có sẵn flexbox | Khi cần full-page layout không scroll |
+| `.component-item` | `flex-shrink-0` | Khi item cần giữ kích thước cố định |
+| `.component-item` | `flex-grow-1` | Khi item cần fill remaining space |
+| `.component-title` | `flex-shrink-0` | Luôn dùng, title không bao giờ co lại |
+| `.component-body` | `flex-grow-1` + `overflow-hidden` | Khi body cần fill space và chứa scroll |
+| `.table-box` | Nằm trong `flex-grow-1` parent | Khi table cần scroll nội bộ |
+| `.table-box.plus` | Giống `.table-box` | Khi cần table box lớn hơn |
+| `.chart-box` | `flex-shrink-0` | Khi chart cần kích thước cố định |
+| `.chart-box.plus` | Giống `.chart-box` | Khi cần chart box lớn hơn |
+
+### Quy tắc sử dụng
+
+**1. `component-wrapper.fit` - Container chính**
+```html
+<!-- ĐÃ CÓ SẴN flexbox, chỉ cần dùng -->
+<div class="component-wrapper fit">
+    <!-- Các section con sẽ là flex items -->
+</div>
+```
+
+**2. Section cố định (header, filter) - dùng `flex-shrink-0`**
+```html
+<div class="component-wrapper fit">
+    <div class="projects-header flex-shrink-0">...</div>
+    <div class="ppap-section flex-shrink-0">Filter...</div>
+</div>
+```
+
+**3. Section fill remaining (table, chart) - dùng `flex-grow-1`**
+```html
+<div class="component-wrapper fit">
+    <div class="ppap-section flex-grow-1 d-flex flex-column overflow-hidden">
+        <div class="component-title flex-shrink-0">Title</div>
+        <div class="table-box">  <!-- Đã có sẵn scroll -->
+            <table>...</table>
+        </div>
+    </div>
+</div>
+```
+
+**4. Chia tỷ lệ (filter 30% - table 70%)**
+```html
+<!-- Cần tự tạo class -->
+<style> .flex-1 { flex: 1; } .flex-2 { flex: 2; } </style>
+
+<div class="component-wrapper fit">
+    <div class="ppap-section flex-1 overflow-hidden">Filter</div>
+    <div class="ppap-section flex-2 d-flex flex-column overflow-hidden">
+        <div class="table-box">...</div>
+    </div>
+</div>
+```
+
+### Sơ đồ tổng hợp
+
+```
+┌─── .component-wrapper.fit (đã có flex column) ──────────────┐
+│                                                             │
+│  ┌─── header + flex-shrink-0 ───────────────────────────┐  │
+│  │  .component-title                                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─── .ppap-section + flex-shrink-0 ────────────────────┐  │
+│  │  Filter (kích thước theo content)                    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌─── .ppap-section + flex-grow-1 + overflow-hidden ────┐  │
+│  │  .component-title + flex-shrink-0                    │  │
+│  │  ┌─── .table-box (scroll nội bộ) ──────────────────┐ │  │
+│  │  │  <table>...</table>                              │ │  │
+│  │  └──────────────────────────────────────────────────┘ │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+Kết hợp Classes:
+- Cố định:  custom-class + flex-shrink-0
+- Fill:     custom-class + flex-grow-1 + overflow-hidden
+- Tỷ lệ:    custom-class + flex-1 hoặc flex-2 (tự tạo)
+- Scroll:   .table-box hoặc .chart-box (đã có sẵn)
+```
 
 ---
 
