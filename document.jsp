@@ -8,7 +8,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section">
+    <div class="ppap-section" style="height: 35vh;">
         <div class="section-header">
             <span><i class="bi bi-search"></i></span>
             <span class="component-title"><spring:message code="documentFilter" /></span>
@@ -73,7 +73,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section mb-0 flex-fill">
+    <div class="ppap-section mb-0" style="height: 50vh;">
         <div class="component-title mb-3"><i class="bi bi-file-earmark"></i> Documents List</div>
         <div class="table-responsive table-box">
             <table class="table" id="document-list">
