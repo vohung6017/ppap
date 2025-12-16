@@ -1,14 +1,14 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %> <%@ taglib uri="http://www.springframework.org/tags"
 prefix="spring" %>
 <div class="component-wrapper fit pb-0 mb-0">
-    <div class="projects-header d-flex" style="height: 5vh">
+    <div class="projects-header d-flex flex-shrink-0">
         <div class="projects-title">
             <span><i class="bi bi-clipboard-check"></i></span>
             <span><spring:message code="ppapTaskManagement" /></span>
         </div>
     </div>
 
-    <div class="ppap-section" style="height: 25vh">
+    <div class="ppap-section flex-shrink-0">
         <div class="section-header component-title">
             <span><i class="bi bi-search"></i></span>
             <span><spring:message code="advancedFilter" /></span>
@@ -56,7 +56,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section mb-0" id="projectListSection" style="height: 50vh">
+    <div class="ppap-section mb-0 flex-grow-1 d-flex flex-column overflow-hidden" id="projectListSection">
         <div class="section-header d-flex justify-content-between">
             <div class="component-title">
                 <span><i class="bi bi-list-ul"></i></span>

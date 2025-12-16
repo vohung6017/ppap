@@ -8,42 +8,42 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section" style="height: 35vh;">
+    <div class="ppap-section flex-shrink-0">
         <div class="section-header">
             <span><i class="bi bi-search"></i></span>
             <span class="component-title"><spring:message code="documentFilter" /></span>
         </div>
-        <div class="row">
-            <div class="col-md-2 d-flex flex-column mb-2">
+        <div class="row g-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="projectCustomer" /></label>
                 <select class="filter-select" id="sl-customer"></select>
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="projectModel" /></label>
                 <select class="filter-select" id="sl-model"></select>
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="projectNumber" /></label>
                 <input type="text" class="filter-select" id="pjNum" />
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="documentType" /></label>
                 <select class="filter-select" id="sl-doc-type"></select>
             </div>
 
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label">xVT Stage</label>
                 <select class="filter-select" id="sl-stage"></select>
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="department" /></label>
                 <select class="filter-select" id="sl-department"></select>
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="process" /></label>
                 <select class="filter-select" id="sl-process"></select>
             </div>
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label">Uploaded Date</label>
                 <input type="text" id="uploaded-date" class="filter-input" />
             </div>
@@ -52,7 +52,7 @@ prefix="spring" %>
                 <select class="filter-select" id="sl-uploader"></select>
             </div>
 
-            <div class="col-md-2 d-flex flex-column mb-2">
+            <div class="col-6 col-md-4 col-lg-2 d-flex flex-column">
                 <label class="filter-label"><spring:message code="searchDocument" /></label>
                 <input type="text" id="search-document" class="filter-input" placeholder="Search..." />
             </div>
@@ -73,7 +73,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="ppap-section mb-0" style="height: 50vh;">
+    <div class="ppap-section mb-0 flex-grow-1 d-flex flex-column overflow-hidden">
         <div class="component-title mb-3"><i class="bi bi-file-earmark"></i> Documents List</div>
         <div class="table-responsive table-box">
             <table class="table" id="document-list">

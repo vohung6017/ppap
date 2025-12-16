@@ -32,12 +32,14 @@
 }
 
 .table-box {
-    height: 35vh;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
 }
 
 .table-box.plus {
-    height: 40vh;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
 }
 
