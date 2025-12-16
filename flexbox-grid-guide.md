@@ -115,7 +115,31 @@ FLEXBOX ROW (navbar, button group, header):
 │  └──────┘  └──────┘  └──────┘           └──────────────┘ │
 └──────────────────────────────────────────────────────────┘
      ↑ Items xếp theo 1 hàng, tự động căn chỉnh
+```
 
+**Code xây dựng Navbar (Flexbox Row):**
+```html
+<nav class="d-flex align-items-center gap-3">
+    <div class="logo">Logo</div>
+    <a href="#">Menu 1</a>
+    <a href="#">Menu 2</a>
+    <div class="ms-auto">  <!-- ms-auto = margin-left: auto → đẩy sang phải -->
+        <input type="search" placeholder="Search...">
+    </div>
+</nav>
+```
+```css
+nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+nav .ms-auto { margin-left: auto; }
+```
+
+---
+
+```
 FLEXBOX COLUMN (page layout, sidebar):
 ┌─────────────────────┐
 │ ┌─────────────────┐ │
@@ -133,6 +157,33 @@ FLEXBOX COLUMN (page layout, sidebar):
   ↑ Items xếp theo 1 cột, phân chia không gian dọc
 ```
 
+**Code xây dựng Page Layout (Flexbox Column):**
+```html
+<div class="page-wrapper d-flex flex-column overflow-hidden" style="height: 100vh;">
+    <header class="flex-shrink-0">Header</header>
+    <section class="filter-section flex-shrink-0">Filter</section>
+    <main class="table-section flex-grow-1 d-flex flex-column overflow-hidden">
+        <div class="table-title flex-shrink-0">Title</div>
+        <div class="table-box flex-grow-1 overflow-auto" style="min-height: 0;">
+            <table>...</table>
+        </div>
+    </main>
+</div>
+```
+```css
+.page-wrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+header, .filter-section { flex-shrink: 0; }
+.table-section { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.table-box { flex: 1; min-height: 0; overflow-y: auto; }
+```
+
+---
+
 ### Minh họa: GRID - Layout 2 chiều
 
 ```
@@ -145,7 +196,31 @@ GRID - Cards/Gallery (đều đặn):
 │   5     │   6     │   7     │   8     │
 └─────────┴─────────┴─────────┴─────────┘
   ↑ Các ô cùng kích thước, tự động wrap
+```
 
+**Code xây dựng Cards Gallery (Grid auto-fill):**
+```html
+<div class="cards-grid">
+    <div class="card">Card 1</div>
+    <div class="card">Card 2</div>
+    <div class="card">Card 3</div>
+    <div class="card">Card 4</div>
+    <!-- Thêm bao nhiêu cards cũng được -->
+</div>
+```
+```css
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    /* auto-fill: tự động tạo cột */
+    /* minmax(250px, 1fr): mỗi cột ít nhất 250px, tối đa 1fr */
+    gap: 1rem;
+}
+```
+
+---
+
+```
 GRID - Dashboard layout phức tạp:
 ┌─────────────────────┬───────────┐
 │                     │           │
@@ -157,6 +232,35 @@ GRID - Dashboard layout phức tạp:
 └──────────┴──────────┴───────────┘
   ↑ Định nghĩa cả rows VÀ columns, span nhiều ô
 ```
+
+**Code xây dựng Dashboard (Grid template areas):**
+```html
+<div class="dashboard">
+    <div class="chart1">Chart 1</div>
+    <div class="stats">Stats</div>
+    <div class="chart2">Chart 2</div>
+    <div class="chart3">Chart 3</div>
+    <div class="list">List</div>
+</div>
+```
+```css
+.dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;  /* 3 cột */
+    grid-template-rows: 200px 150px;     /* 2 hàng */
+    grid-template-areas:
+        "chart1 chart1 stats"
+        "chart2 chart3 list";
+    gap: 1rem;
+}
+.chart1 { grid-area: chart1; }  /* span 2 cột */
+.stats  { grid-area: stats; }
+.chart2 { grid-area: chart2; }
+.chart3 { grid-area: chart3; }
+.list   { grid-area: list; }    /* span 2 hàng nếu cần: grid-row: 1 / 3; */
+```
+
+---
 
 ### Khi nào dùng cái nào?
 
