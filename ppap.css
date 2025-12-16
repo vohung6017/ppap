@@ -1,6 +1,6 @@
 :root {
-    --navbar-height: 70px;
-    --alert:#303866;
+    --navbar-height:4.375rem;
+    --alert: #303866;
     --primary-bg: #0a0e27;
     --secondary-bg: #12172e;
     --card-bg: #1a1f3a;
@@ -27,28 +27,28 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding: 0 1.25rem;
-    box-sizing: border-box;
+    padding-top: var(--navbar-height);
+    padding-bottom: 0;
 }
 
 .table-box {
-    flex: 1 1 0;
-    min-height: 0;
+    height: 35vh;
     overflow-y: auto;
 }
 
 .table-box.plus {
-    flex: 1 1 0;
-    min-height: 0;
+    height: 40vh;
     overflow-y: auto;
 }
 
 body {
-    font-family: "Segoe UI", "Microsoft JhengHei", Arial, sans-serif;
+    font-family: 'Segoe UI', 'Microsoft JhengHei', Arial, sans-serif;
     background: linear-gradient(135deg, var(--primary-bg) 0%, #1a1d3f 100%);
     color: var(--text-primary);
-    min-height: 100vh;
+    height: 100vh;
     padding: 1.25rem;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
 @keyframes pulse {
@@ -539,15 +539,6 @@ body {
     border-radius: 0.75rem;
     padding: 1.5625rem;
     margin-bottom: 1.5625rem;
-    flex-shrink: 0;
-}
-
-.ppap-section.flex-fill {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
 }
 
 .section-header {
@@ -579,7 +570,7 @@ body {
     font-weight: 700;
 }
 
-.filter-label.plus{
+.filter-label.plus {
     font-size: 1rem;
     color: var(--text-secondary);
     font-weight: 700;
@@ -760,18 +751,19 @@ body {
 }
 
 .modal-backdrop {
-    z-index: 1055; /* Giá trị cao hơn mặc định của Bootstrap */
+    z-index: 1055;
 }
 
-/* Ensure the modal container itself is above the backdrop. Use modal element
-   (not only .modal-dialog) to avoid stacking-context issues when dialog is
-   moved or when custom markup is used. Avoid using !important unless needed. */
 .modal {
     z-index: 1060;
 }
 
-.modal-dialog {
-    /* keep default behavior; no explicit z-index needed here */
+.modal-content {
+    background: var(--secondary-bg);
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
 }
 
 .file-card {
@@ -969,7 +961,7 @@ body {
 }
 
 .toggle-switch::after {
-    content: "";
+    content: '';
     position: absolute;
     top: 0.1875rem;
     left: 0.1875rem;
@@ -1030,6 +1022,19 @@ body {
 .modal-body,
 .modal-footer {
     background-color: var(--secondary-bg);
+}
+
+/* .modal-header,
+.modal-footer {
+    border: 0;
+} */
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
 }
 
 .modal-xl {
@@ -1193,6 +1198,10 @@ body {
     justify-content: center;
     font-weight: 600;
     font-size: 0.75rem;
+}
+
+.raci-cell.raci-empty {
+    visibility: hidden;
 }
 
 .task-id-cell {
@@ -1978,7 +1987,6 @@ tbody {
     font-size: 0.9rem;
 }
 
-
 .swal2-popup {
     background: var(--alert);
     color: white;
@@ -1991,12 +1999,12 @@ tbody {
 }
 
 .swal2-icon {
-    border-color: rgba(255, 255, 255, 0.8); 
-    color: rgba(255, 255, 255, 0.8); 
+    border-color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .swal2-confirm {
-    background-color: #3949ab; 
+    background-color: #3949ab;
     color: white;
     font-weight: 500;
     padding: 0.6em 1.5em;
@@ -2032,51 +2040,51 @@ tbody {
 }
 
 .select2-container {
-  width: 100% !important;
+    width: 100% !important;
 }
 .select2-container--default .select2-selection--single {
-  background: var(--secondary-bg) !important;
-  border: 0.0625rem solid var(--border-color) !important;
-  border-radius: 0.5rem !important;
-  height: 2.65rem !important;
-  min-height: 2.5rem !important;
-  padding: 0.625rem !important;
-  display: flex !important;
-  align-items: center !important;
+    background: var(--secondary-bg) !important;
+    border: 0.0625rem solid var(--border-color) !important;
+    border-radius: 0.5rem !important;
+    height: 2.65rem !important;
+    min-height: 2.5rem !important;
+    padding: 0.625rem !important;
+    display: flex !important;
+    align-items: center !important;
 }
 .select2-container--default .select2-selection--single .select2-selection__rendered {
-  color: var(--text-primary) !important;
-  line-height: 1.5 !important;
-  padding: 0 !important;
-  font-size: 0.875rem !important;
+    color: var(--text-primary) !important;
+    line-height: 1.5 !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
-  display: none;
+    display: none;
 }
 
 .select2-dropdown {
-  background: var(--secondary-bg) !important;
-  border: 0.0625rem solid var(--border-color) !important;
-  border-radius: 0.5rem !important;
+    background: var(--secondary-bg) !important;
+    border: 0.0625rem solid var(--border-color) !important;
+    border-radius: 0.5rem !important;
 }
 .select2-container--default .select2-results__option {
-  background: var(--secondary-bg) !important;
-  color: var(--text-primary) !important;
-  padding: 0.75rem !important;
-  font-size: 0.875rem !important;
+    background: var(--secondary-bg) !important;
+    color: var(--text-primary) !important;
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
 }
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background: var(--hover-bg) !important;
+    background: var(--hover-bg) !important;
 }
 
 .select2-container--default .select2-search--dropdown .select2-search__field {
-  background: var(--card-bg) !important;
-  border: 0.0625rem solid var(--border-color) !important;
-  border-radius: 0.375rem !important;
-  color: var(--text-primary) !important;
-  padding: 0.75rem !important;
-  font-size: 0.875rem !important;
+    background: var(--card-bg) !important;
+    border: 0.0625rem solid var(--border-color) !important;
+    border-radius: 0.375rem !important;
+    color: var(--text-primary) !important;
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
 }
 
 ::-webkit-scrollbar {
@@ -2084,18 +2092,13 @@ tbody {
     height: 0.1rem;
 }
 
-/* Nền của scrollbar */
 ::-webkit-scrollbar-track {
-    background: #acacac;
-    border-radius: 0;
+    background: rgba(255, 255, 255, 0.04);
 }
 
-/* Thanh cuộn */
 ::-webkit-scrollbar-thumb {
-    /* background: #16288ab9; */
-    background: var(--accent-cyan);
-    border-radius: 0;
-    /* background-color: rgba(255, 235, 59, 0.637); */
+    background: #3e4757;
+    border-radius: 0.5rem;
 }
 
 .os-scrollbar {
