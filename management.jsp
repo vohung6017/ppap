@@ -621,26 +621,7 @@ prefix="spring" %>
                             <span><i class="bi bi-paperclip"></i></span>
                             <span><spring:message code="attachments" /></span>
                         </div>
-                        <div id="attachments-list" class="attachments-list">
-                            <div class="attachment-item">
-                                <div class="attachment-info">
-                                    <span class="attachment-icon"><i class="bi bi-file-earmark"></i></span>
-                                    <span class="attachment-name"></span>
-                                </div>
-                                <button class="download-btn">
-                                    <span><i class="bi bi-download"></i> <spring:message code="download" /></span>
-                                </button>
-                            </div>
-                            <div class="attachment-item">
-                                <div class="attachment-info">
-                                    <span class="attachment-icon"><i class="bi bi-bar-chart-line"></i></span>
-                                    <span class="attachment-name"></span>
-                                </div>
-                                <button class="download-btn">
-                                    <span><i class="bi bi-download"></i> <spring:message code="download" /></span>
-                                </button>
-                            </div>
-                        </div>
+                        <div id="attachments-list" class="attachments-list"></div>
                         <div class="d-flex mt-3 justify-content-end">
                             <button id="upload" class="add-attachment-btn">
                                 <span><i class="bi bi-paperclip"></i></span>

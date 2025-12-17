@@ -578,10 +578,19 @@ async function showTaskByStage(projectId, stage) {
     }
 }
 
-function showTaskByFilter(filterType, projectId = null) {
+async function showTaskByFilter(filterType, projectId = null) {
     const modal = document.getElementById('taskListModal');
-    const title = document.getElementById('taskListModalTitle');
+    const title = document.getElementById('taskListModalLabel');
     const tbody = document.getElementById('taskListModalBody');
+
+    // Map filter type to API status param
+    const statusMap = {
+        'in-progress': 'IN_PROGRESS',
+        'pending': 'PENDING',
+        'overdue': 'OVERDUE',
+        'all': null
+    };
+    const status = statusMap[filterType] || null;
 
     let titleText = '';
     if (filterType === 'all') {
@@ -601,13 +610,169 @@ function showTaskByFilter(filterType, projectId = null) {
     }
 
     if (tbody) {
-        tbody.innerHTML =
-            '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">Loading...</td></tr>';
     }
 
     if (modal) {
         var bsModal = new bootstrap.Modal(modal);
         bsModal.show();
+    }
+
+    try {
+        let tasks = [];
+        if (projectId) {
+            // Fetch tasks for specific project with status filter
+            let url = `/sample-system/api/project/${projectId}/tasks`;
+            if (status) {
+                url += `?status=${encodeURIComponent(status)}`;
+            }
+            const res = await fetch(url);
+            if (res.ok) {
+                const json = await res.json();
+                tasks = json.data || [];
+            }
+        }
+
+        if (!tasks || tasks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = tasks.map((task) => {
+            const statusClass = getStatusBadgeClass(task.status);
+            const statusLabel = getStatusLabel(task.status);
+            const priorityClass = getPriorityBadgeClass(task.priority);
+            const priorityLabel = getPriorityLabel(task.priority);
+            const driDisplay = getUserLabelById(task.dri) || '-';
+            const dueDate = task.dueDate || '-';
+            const stageName = task.stageName || task.stageId || '-';
+
+            return `
+                <tr data-id="${task.id}" data-project-id="${projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                    <td class="task-id-cell">${task.taskCode || task.id}</td>
+                    <td>${task.name || '-'}</td>
+                    <td>${projectId || '-'}</td>
+                    <td>${stageName}</td>
+                    <td><span class="task-status-badge ${statusClass}">${statusLabel}</span></td>
+                    <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
+                    <td>${driDisplay}</td>
+                    <td>${dueDate}</td>
+                    <td class="action-icons" onclick="event.stopPropagation();">
+                        <button class="action-icon-btn" data-id="${task.id}" data-project-id="${projectId}" data-action="editTaskDetail"><i class="bi bi-pencil"></i></button>
+                        <button class="action-icon-btn" data-id="${task.id}" data-action="deleteTask"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error fetching tasks by filter:', error);
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">Failed to load tasks</td></tr>';
+    }
+}
+
+async function showDashboardTasks(filterType) {
+    const modal = document.getElementById('taskListModal');
+    const title = document.getElementById('taskListModalLabel');
+    const tbody = document.getElementById('taskListModalBody');
+
+    // Map filter type to API status param
+    const statusMap = {
+        'in-progress': 'IN_PROGRESS',
+        'pending': 'PENDING',
+        'overdue': 'OVERDUE',
+        'all': null
+    };
+    const status = statusMap[filterType] || null;
+
+    let titleText = '';
+    if (filterType === 'all') {
+        titleText = `${t('all')} ${t('taskName')}`;
+    } else if (filterType === 'in-progress') {
+        titleText = `${t('inProgress')} ${t('taskName')}`;
+    } else if (filterType === 'pending') {
+        titleText = `${t('pending')} ${t('taskName')}`;
+    } else if (filterType === 'overdue') {
+        titleText = `${t('overdue')} ${t('taskName')}`;
+    }
+
+    if (title) {
+        title.textContent = titleText;
+    }
+
+    if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">Loading...</td></tr>';
+    }
+
+    if (modal) {
+        var bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    try {
+        // Calculate date range: first day of current month to today
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        function formatDate(d) {
+            const y = d.getFullYear();
+            const m = ('0' + (d.getMonth() + 1)).slice(-2);
+            const day = ('0' + d.getDate()).slice(-2);
+            return `${y}/${m}/${day} 00:00:00`;
+        }
+
+        const startTime = formatDate(startOfMonth);
+        const endTime = formatDate(now);
+
+        // Build API URL
+        let url = `/sample-system/api/dashboard/tasks?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
+        if (status) {
+            url += `&status=${encodeURIComponent(status)}`;
+        }
+
+        const res = await fetch(url);
+        let tasks = [];
+        if (res.ok) {
+            const json = await res.json();
+            tasks = json.data || [];
+        }
+
+        if (!tasks || tasks.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = tasks.map((task) => {
+            const statusClass = getStatusBadgeClass(task.status);
+            const statusLabel = getStatusLabel(task.status);
+            const priorityClass = getPriorityBadgeClass(task.priority);
+            const priorityLabel = getPriorityLabel(task.priority);
+            const driDisplay = getUserLabelById(task.dri) || '-';
+            const dueDate = task.dueDate || '-';
+            const stageName = task.stageName || task.stageId || '-';
+            const projectId = task.projectId || '-';
+
+            return `
+                <tr data-id="${task.id}" data-project-id="${projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                    <td class="task-id-cell">${task.taskCode || task.id}</td>
+                    <td>${task.name || '-'}</td>
+                    <td>${projectId}</td>
+                    <td>${stageName}</td>
+                    <td><span class="task-status-badge ${statusClass}">${statusLabel}</span></td>
+                    <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
+                    <td>${driDisplay}</td>
+                    <td>${dueDate}</td>
+                    <td class="action-icons" onclick="event.stopPropagation();">
+                        <button class="action-icon-btn" data-id="${task.id}" data-project-id="${projectId}" data-action="editTaskDetail"><i class="bi bi-pencil"></i></button>
+                        <button class="action-icon-btn" data-id="${task.id}" data-action="deleteTask"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error fetching dashboard tasks:', error);
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">Failed to load tasks</td></tr>';
     }
 }
 
@@ -1232,6 +1397,9 @@ function initEventListeners() {
                 break;
             case 'addCftMember':
                 addCftMember();
+                break;
+            case 'showDashboardTasks':
+                showDashboardTasks(filterType);
                 break;
         }
     });
@@ -1873,6 +2041,34 @@ async function editTaskDetail(taskId, projectId) {
             const prioritySelect = modalRoot.querySelector('#modal-sl-priority');
             const stageSelect = modalRoot.querySelector('#sl-xvt');
             const typeSelect = modalRoot.querySelector('#sl-type');
+
+            // Fetch status options with forUpdate=true for task detail modal
+            if (statusSelect) {
+                try {
+                    const statusRes = await fetch('/sample-system/api/tasks/status?forUpdate=true');
+                    if (statusRes.ok) {
+                        const statusJson = await statusRes.json();
+                        const statuses = statusJson.data || [];
+                        statusSelect.innerHTML = '<option value="">--Select--</option>';
+                        statuses.forEach((s) => {
+                            const opt = document.createElement('option');
+                            if (typeof s === 'string' || typeof s === 'number') {
+                                opt.value = s;
+                                opt.textContent = s;
+                            } else if (s && s.id && s.name) {
+                                opt.value = s.id;
+                                opt.textContent = s.name;
+                            } else if (s && s.name) {
+                                opt.value = s.name;
+                                opt.textContent = s.name;
+                            }
+                            statusSelect.appendChild(opt);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Failed to fetch status options with forUpdate:', e);
+                }
+            }
 
             const ensureAndSet = (selectEl, value) => {
                 if (!selectEl) return;

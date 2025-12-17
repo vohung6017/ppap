@@ -9,7 +9,7 @@ prefix="spring" %>
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="all">
         <div class="stat-header">
             <span class="stat-label"><spring:message code="totalProjects" /></span>
             <span class="stat-icon"><i class="bi bi-folder"></i></span>
@@ -20,7 +20,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="in-progress">
         <div class="stat-header">
             <span class="stat-label"><spring:message code="inProgressTasks" /></span>
             <span class="stat-icon"><i class="bi bi-arrow-repeat"></i></span>
@@ -31,7 +31,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="pending">
         <div class="stat-header">
             <span class="stat-label"><spring:message code="weeklyTodo" /></span>
             <span class="stat-icon"><i class="bi bi-hourglass-split"></i></span>
@@ -42,7 +42,7 @@ prefix="spring" %>
         </div>
     </div>
 
-    <div class="stat-card">
+    <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="overdue">
         <div class="stat-header">
             <span class="stat-label"><spring:message code="overdueTasks" /></span>
             <span class="stat-icon"><i class="bi bi-exclamation-triangle"></i></span>

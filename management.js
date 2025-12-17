@@ -581,6 +581,21 @@ async function getComments(id) {
                 const safeDate = String(date);
                 const safeContent = String(content);
 
+                const isSystemUpdate = safeContent.startsWith('Task updated:');
+
+                if (isSystemUpdate) {
+                    const changes = parseTaskUpdates(safeContent);
+                    return `
+                        <div class="update-log-item ml-1" style="font-size:0.85rem; font-style: italic; opacity: 0.65;">
+                            <span class="update-label">Updated:</span>
+                            <span class="update-changes">${escapeHtml(changes)}</span>
+                            <span class="update-separator">-</span>
+                            <span class="update-author">${escapeHtml(safeAuthor)}</span>
+                            <span class="update-separator">-</span>
+                            <span class="update-date">${escapeHtml(safeDate)}</span>
+                        </div>`;
+                }
+
                 return `
                 <div class="comment-item">
                     <div class="comment-header">
@@ -597,8 +612,25 @@ async function getComments(id) {
 
         container.innerHTML = html;
     } catch (error) {
-        console.error('Lỗi khi lấy comments: ' + (error && error.message ? error.message : error));
+        console.error('Error getting comments: ' + (error && error.message ? error.message : error));
     }
+}
+
+function parseTaskUpdates(content) {
+    const fieldMatches = content.matchAll(/\[(\w+):/g);
+    const fields = Array.from(fieldMatches).map((m) => m[1]);
+
+    const fieldLabels = {
+        dri: 'DRI',
+        dueDate: 'Deadline',
+        status: 'Status',
+        priority: 'Priority',
+        stageId: 'Stage',
+        processId: 'Process',
+    };
+
+    const translatedFields = fields.map((f) => fieldLabels[f] || f);
+    return translatedFields.join(', ') || 'Task updated';
 }
 
 async function handleAddCustomTask() {
@@ -2235,6 +2267,34 @@ async function showTaskDetailModal(projectId, taskId) {
         try {
             const statusSelect = modalRoot.querySelector('#sl-status');
             const prioritySelect = modalRoot.querySelector('#sl-priority');
+
+            // Fetch status options with forUpdate=true for task detail modal
+            if (statusSelect) {
+                try {
+                    const statusRes = await fetch('/sample-system/api/tasks/status?forUpdate=true');
+                    if (statusRes.ok) {
+                        const statusJson = await statusRes.json();
+                        const statuses = statusJson.data || [];
+                        statusSelect.innerHTML = '<option value="">--Select--</option>';
+                        statuses.forEach((s) => {
+                            const opt = document.createElement('option');
+                            if (typeof s === 'string' || typeof s === 'number') {
+                                opt.value = s;
+                                opt.textContent = s;
+                            } else if (s && s.id && s.name) {
+                                opt.value = s.id;
+                                opt.textContent = s.name;
+                            } else if (s && s.name) {
+                                opt.value = s.name;
+                                opt.textContent = s.name;
+                            }
+                            statusSelect.appendChild(opt);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Failed to fetch status options with forUpdate:', e);
+                }
+            }
 
             const ensureAndSet = (selectEl, value) => {
                 if (!selectEl) return;
