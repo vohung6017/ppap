@@ -13,10 +13,10 @@ prefix="spring" %>
             <span><i class="bi bi-search"></i></span>
             <span><spring:message code="advancedFilter" /></span>
         </div>
-        <div class="filter-grid">
+        <div class="filter-grid filter-grid--management">
             <div class="filter-item">
-                <label class="filter-label plus ml-1 mb-0">Project Name</label>
-                <input type="text" class="filter-select" id="ppapFilterProject" placeholder="Search..." />
+                <label class="filter-label plus ml-1 mb-0"><spring:message code="label.projectName" /></label>
+                <input type="text" class="filter-select" id="ppapFilterProject" placeholder="<spring:message code='placeholder.search' />" />
             </div>
 
             <div class="filter-item">
@@ -30,28 +30,28 @@ prefix="spring" %>
             </div>
 
             <div class="filter-item">
-                <label class="filter-label plus ml-1 mb-0">Created By</label>
+                <label class="filter-label plus ml-1 mb-0"><spring:message code="label.createdBy" /></label>
                 <select id="filter-created-by" class="filter-input"></select>
             </div>
 
             <div class="filter-item">
-                <label class="filter-label plus ml-1 mb-0">Status</label>
+                <label class="filter-label plus ml-1 mb-0"><spring:message code="status" /></label>
                 <select class="filter-input" id="ppapFilterProjectStatus">
                     <option value="">--Select--</option>
                 </select>
             </div>
 
             <div class="filter-item">
-                <label class="filter-label plus ml-1 mb-0">Created Date</label>
+                <label class="filter-label plus ml-1 mb-0"><spring:message code="label.createdDate" /></label>
                 <input id="filter-created-date" type="text" class="filter-input" />
             </div>
         </div>
         <div class="d-flex justify-content-end">
             <button id="clear_filter_button" type="button" class="btn btn-sm secondary-btn mr-4">
-                <i class="bi bi-x-circle"></i> Clear
+                <i class="bi bi-x-circle"></i> <spring:message code="button.clear" />
             </button>
             <button id="filter_button" type="button" class="btn btn-sm btn-secondary action-btn">
-                <i class="bi bi-search"></i> Search
+                <i class="bi bi-search"></i> <spring:message code="button.search" />
             </button>
         </div>
     </div>
@@ -60,7 +60,7 @@ prefix="spring" %>
         <div class="section-header d-flex justify-content-between">
             <div class="component-title">
                 <span><i class="bi bi-list-ul"></i></span>
-                <span>Project List</span>
+                <span><spring:message code="projectList" /></span>
             </div>
             <button class="primary-btn" id="createProjectBtn" onclick="showCreateProjectForm()">
                 <span><i class="bi bi-plus-square"></i></span>
@@ -72,12 +72,12 @@ prefix="spring" %>
                 <thead>
                     <tr>
                         <th><spring:message code="customer" /></th>
-                        <th>Project Name</th>
-                        <th><spring:message code="status" /></th>
-                        <th>Created By</th>
-                        <th>Created At</th>
-                        <th>Approved By</th>
-                        <th>Approved At</th>
+                        <th><spring:message code="label.projectName" /></th>
+                        <th class="pl-3"><spring:message code="status" /></th>
+                        <th><spring:message code="label.createdBy" /></th>
+                        <th><spring:message code="label.createdAt" /></th>
+                        <th><spring:message code="label.approvedBy" /></th>
+                        <th><spring:message code="label.approvedAt" /></th>
                         <th><spring:message code="actions" /></th>
                     </tr>
                 </thead>
@@ -108,7 +108,7 @@ prefix="spring" %>
         <div class="bottom-actions" style="margin-top: 20px">
             <button class="secondary-btn" onclick="cancelProjectCreation()">
                 <span><i class="bi bi-x-circle"></i></span>
-                <span>Cancel</span>
+                <span><spring:message code="cancel" /></span>
             </button>
             <button class="secondary-btn" onclick="showRACIMatrix()">
                 <span><i class="bi bi-grid-3x3"></i></span>
@@ -140,17 +140,17 @@ prefix="spring" %>
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div class="modal-body" style="min-height: 400px; max-height: 60vh">
-                <p style="color: var(--text-secondary); margin-bottom: 20px">
-                    <span>Select task to add to the project:</span>
-                </p>
+                <div class="modal-body" style="min-height: 400px; max-height: 60vh">
+                    <p style="color: var(--text-secondary); margin-bottom: 20px">
+                        <span><spring:message code="modal.selectTaskDesc" /></span>
+                    </p>
                 <div class="ppap-actions d-flex justify-content-between mb-2 ml-3 mr-3">
                     <div class="">
                         <button class="select-all-btn" onclick="selectAllPPAP()">
-                            <span><i class="bi bi-check-square"></i> Select All</span>
+                            <span><i class="bi bi-check-square"></i> <spring:message code="selectAll" /></span>
                         </button>
                         <button class="deselect-all-btn" onclick="deselectAllPPAP()">
-                            <span><i class="bi bi-square"></i> Deselect All</span>
+                            <span><i class="bi bi-square"></i> <spring:message code="deselectAll" /></span>
                         </button>
                     </div>
                     <div class="">
@@ -158,7 +158,7 @@ prefix="spring" %>
                             id="filter-standard-ppap"
                             class="filter-input"
                             type="text"
-                            placeholder="Search tasks..." />
+                            placeholder="<spring:message code='placeholder.searchTasks' />" />
                     </div>
                 </div>
                 <div
@@ -171,11 +171,11 @@ prefix="spring" %>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Cancel</span>
+                    <span><spring:message code="cancel" /></span>
                 </button>
                 <button type="button" class="primary-btn" onclick="confirmPPAPSelection()">
                     <span><i class="bi bi-check-lg"></i></span>
-                    <span>Confirm</span>
+                    <span><spring:message code="confirm" /></span>
                 </button>
             </div>
         </div>
@@ -194,7 +194,7 @@ prefix="spring" %>
             <div class="modal-header">
                 <div class="modal-title" id="projectTasksModalLabel">
                     <span><i class="bi bi-list-task"></i></span>
-                    <span>Project Tasks</span>
+                    <span><spring:message code="modal.projectTasksTitle" /></span>
                 </div>
                 <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <i class="bi bi-x-lg"></i>
@@ -205,29 +205,29 @@ prefix="spring" %>
                     <div class="detail-block" style="flex: 1; min-width: 220px">
                         <div class="component-title">
                             <span class="d-inline-flex mb-3" style="gap: 0.3rem"
-                                ><i class="bi bi-info-circle"></i> Details</span
+                                ><i class="bi bi-info-circle"></i> <spring:message code="modal.detailsTitle" /></span
                             >
                         </div>
                         <input type="hidden" id="pt_detail_projectId" />
 
                         <div class="filter-grid">
                             <div class="filter-item">
-                                <label class="filter-label mb-0 ml-1" for="pt_detail_customer">Customer</label>
+                                <label class="filter-label mb-0 ml-1" for="pt_detail_customer"><spring:message code="customer" /></label>
                                 <input type="text" class="filter-input" id="pt_detail_customer" placeholder="" />
                             </div>
 
                             <div class="filter-item">
-                                <label class="filter-label mb-0 ml-1" for="pt_detail_projectName">Project</label>
+                                <label class="filter-label mb-0 ml-1" for="pt_detail_projectName"><spring:message code="project" /></label>
                                 <input type="text" class="filter-input" id="pt_detail_projectName" placeholder="" />
                             </div>
 
                             <div class="filter-item">
-                                <label class="filter-label mb-0 ml-1" for="pt_detail_createdDate">Created</label>
+                                <label class="filter-label mb-0 ml-1" for="pt_detail_createdDate"><spring:message code="label.created" /></label>
                                 <input type="text" class="filter-input" id="pt_detail_createdDate" />
                             </div>
 
                             <div class="filter-item">
-                                <label class="filter-label mb-0 ml-1">Status</label>
+                                <label class="filter-label mb-0 ml-1"><spring:message code="status" /></label>
                                 <input type="text" class="filter-input" id="pt_detail_status" />
                             </div>
                         </div>
@@ -237,46 +237,46 @@ prefix="spring" %>
                 <div id="operation-add" class="operation-block">
                     <div class="component-title mb-3">
                         <div class="d-inline-flex" style="gap: 0.3rem">
-                            <i class="bi bi-file-earmark-plus"></i> Operation Options
+                            <i class="bi bi-file-earmark-plus"></i> <spring:message code="operationOptions" />
                         </div>
                     </div>
                     <div class="action-buttons-row" style="display: flex; gap: 8px; flex-wrap: wrap">
                         <button class="action-btn" onclick="showStandardPPAP()">
                             <span><i class="bi bi-clipboard-check"></i></span>
-                            <span><span id="size-ppap"></span> Standard PPAP</span>
+                            <span><span id="size-ppap"></span> <spring:message code="standard26PPAP" /></span>
                         </button>
                         <button class="action-btn" onclick="showCustomTask()">
                             <span><i class="bi bi-plus-circle"></i></span>
-                            <span>Custom Task</span>
+                            <span><spring:message code="customTask" /></span>
                         </button>
                         <button id="copy-template" class="action-btn" onclick="showCopyTemplate()">
                             <span><i class="bi bi-clipboard-check"></i></span>
-                            <span>Copy From Template</span>
+                            <span><spring:message code="copyProjectTemplate" /></span>
                         </button>
                     </div>
                 </div>
                 <div class="component-title mt-3 d-flex justify-content-between align-items-center">
-                    <span class="d-inline-flex" style="gap: 0.3rem"><i class="bi bi-list-task"></i> Tasks List </span>
-                    <input id="search-task" class="filter-input" type="text" placeholder="Search..." />
+                    <span class="d-inline-flex" style="gap: 0.3rem"><i class="bi bi-list-task"></i> <spring:message code="modal.tasksListTitle" /> </span>
+                    <input id="search-task" class="filter-input" type="text" placeholder="<spring:message code='placeholder.search' />" />
                 </div>
                 <div id="projectTasksContent" style="margin-top: 12px; max-height: 60vh; overflow-y: auto"></div>
             </div>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Close</span>
+                    <span><spring:message code="close" /></span>
                 </button>
                 <button
                     id="showRaciFromProjectBtn"
                     class="btn action-btn btn-secondary"
                     onclick="showRACIMatrixFromProject()">
-                    <i class="bi bi-bar-chart-line"></i> Show RACI
+                    <i class="bi bi-bar-chart-line"></i> <spring:message code="button.showRaci" />
                 </button>
                 <button class="btn action-btn btn-secondary" onclick="saveProjectTaskQuantity()">
-                    <i class="bi bi-floppy"></i> Save
+                    <i class="bi bi-floppy"></i> <spring:message code="save" />
                 </button>
                 <button class="btn btn-secondary action-btn" onclick="projectTasksSubmit()">
-                    <i class="bi bi-check-circle"></i> Submit
+                    <i class="bi bi-check-circle"></i> <spring:message code="submit" />
                 </button>
             </div>
         </div>
@@ -290,7 +290,7 @@ prefix="spring" %>
             <div class="modal-header">
                 <div class="modal-title" id="customTaskModalLabel">
                     <span><i class="bi bi-plus-circle"></i></span>
-                    <span>Add custom task</span>
+                    <span><spring:message code="modal.addCustomTaskTitle" /></span>
                 </div>
                 <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <i class="bi bi-x-lg"></i>
@@ -299,7 +299,7 @@ prefix="spring" %>
             <div class="modal-body">
                 <div class="project-form-grid">
                     <div class="form-group">
-                        <label class="form-label">Task Name <span class="required">*</span></label>
+                        <label class="form-label"><spring:message code="label.taskName" /> <span class="required">*</span></label>
                         <input id="custom-task-name" type="text" class="form-input" placeholder="" />
                     </div>
                     <!-- <div class="form-group d-none">
@@ -307,7 +307,7 @@ prefix="spring" %>
                         <input id="custom-task-id" type="text" class="form-input" placeholder="" />
                     </div> -->
                     <div class="form-group">
-                        <label class="form-label">xVT <span class="required">*</span></label>
+                        <label class="form-label"><spring:message code="label.xvt" /> <span class="required">*</span></label>
                         <select id="custom-sl-xvt" class="form-select"></select>
                     </div>
                     <div class="form-group">
@@ -331,23 +331,23 @@ prefix="spring" %>
                         <input id="custom-deadline" type="date" class="form-input" />
                     </div>
                     <div class="form-group" style="grid-column: 1 / -1">
-                        <label class="form-label">Task Description</label>
+                        <label class="form-label"><spring:message code="label.taskDescription" /></label>
                         <textarea
                             id="custom-task-description"
                             class="form-input"
                             style="min-height: 80px; resize: vertical"
-                            placeholder="Enter task description..."></textarea>
+                            placeholder="<spring:message code='placeholder.taskDescription' />"></textarea>
                     </div>
                 </div>
             </div>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Cancel</span>
+                    <span><spring:message code="cancel" /></span>
                 </button>
                 <button id="add-custom" type="button" class="primary-btn">
                     <span><i class="bi bi-check-lg"></i></span>
-                    <span>Add Task</span>
+                    <span><spring:message code="addTask" /></span>
                 </button>
             </div>
         </div>
@@ -366,7 +366,7 @@ prefix="spring" %>
             <div class="modal-header">
                 <div class="modal-title">
                     <span><i class="bi bi-clipboard-check"></i></span>
-                    <span>Copy project template</span>
+                    <span><spring:message code="modal.copyTemplateTitle" /></span>
                 </div>
                 <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <i class="bi bi-x-lg"></i>
@@ -374,17 +374,17 @@ prefix="spring" %>
             </div>
             <div class="modal-body">
                 <p style="color: var(--text-secondary); margin-bottom: 20px">
-                    Select an existing project as a template and copy its task list to the new project:
+                    <spring:message code="modal.copyTemplateDesc" />
                 </p>
                 <div class="info-section" style="margin-bottom: 20px">
                     <div class="section-title">
                         <span><i class="bi bi-box-arrow-up"></i></span>
-                        <span>Source Project</span>
+                        <span><spring:message code="modal.sourceProject" /></span>
                     </div>
                     <div class="project-form-grid">
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Source Customer</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.sourceCustomer" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -394,7 +394,7 @@ prefix="spring" %>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Source Project Number</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.sourceProjectNumber" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -404,7 +404,7 @@ prefix="spring" %>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Source xVT Stage</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.sourceXvtStage" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -415,7 +415,7 @@ prefix="spring" %>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Source Process</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.sourceProcess" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -429,12 +429,12 @@ prefix="spring" %>
                 <div class="info-section">
                     <div class="section-title">
                         <span><i class="bi bi-box-arrow-in-down"></i></span>
-                        <span>Target Project</span>
+                        <span><spring:message code="modal.targetProject" /></span>
                     </div>
                     <div class="project-form-grid">
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Target Customer</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.targetCustomer" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -444,13 +444,13 @@ prefix="spring" %>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Target Project Number</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.targetProjectNumber" /></span> <span class="required">*</span></label
                             >
-                            <input type="text" class="form-input" placeholder="e.g., FTV-004" />
+                            <input type="text" class="form-input" placeholder="<spring:message code='placeholder.exampleProjectNumber' />" />
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Target xVT stage</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.targetXvtStage" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -461,7 +461,7 @@ prefix="spring" %>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
-                                ><span>Target Process</span> <span class="required">*</span></label
+                                ><span><spring:message code="label.targetProcess" /></span> <span class="required">*</span></label
                             >
                             <select class="form-select">
                                 <option value="">Please select</option>
@@ -476,11 +476,11 @@ prefix="spring" %>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Cancel</span>
+                    <span><spring:message code="cancel" /></span>
                 </button>
                 <button type="button" class="primary-btn">
                     <span><i class="bi bi-check-lg"></i></span>
-                    <span>Confirm Copy</span>
+                    <span><spring:message code="confirmCopy" /></span>
                 </button>
             </div>
         </div>
@@ -496,7 +496,9 @@ prefix="spring" %>
                     <span><i class="bi bi-bar-chart-line"></i></span>
                     <span><spring:message code="raciMatrixTitle" /></span>
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom: 20px">
@@ -508,8 +510,8 @@ prefix="spring" %>
                                 border-radius: 8px;
                                 border: 1px solid var(--accent-green);
                             ">
-                            <h3 style="color: var(--accent-green); margin-bottom: 8px">R - Responsible</h3>
-                            <p style="font-size: 13px; color: var(--text-secondary)">Person who executes the task</p>
+                            <h3 style="color: var(--accent-green); margin-bottom: 8px"><spring:message code="label.raciResponsible" /></h3>
+                            <p style="font-size: 13px; color: var(--text-secondary)"><spring:message code="label.raciResponsibleDesc" /></p>
                         </div>
                         <div
                             style="
@@ -518,10 +520,8 @@ prefix="spring" %>
                                 border-radius: 8px;
                                 border: 1px solid var(--accent-blue);
                             ">
-                            <h3 style="color: var(--accent-blue); margin-bottom: 8px">A - Accountable</h3>
-                            <p style="font-size: 13px; color: var(--text-secondary)">
-                                Person who is ultimately responsible and has decision-making authority
-                            </p>
+                            <h3 style="color: var(--accent-blue); margin-bottom: 8px"><spring:message code="label.raciAccountable" /></h3>
+                            <p style="font-size: 13px; color: var(--text-secondary)"><spring:message code="label.raciAccountableDesc" /></p>
                         </div>
                         <div
                             style="
@@ -530,10 +530,8 @@ prefix="spring" %>
                                 border-radius: 8px;
                                 border: 1px solid var(--accent-orange);
                             ">
-                            <h3 style="color: var(--accent-orange); margin-bottom: 8px">C - Consulted</h3>
-                            <p style="font-size: 13px; color: var(--text-secondary)">
-                                Person who is consulted for input
-                            </p>
+                            <h3 style="color: var(--accent-orange); margin-bottom: 8px"><spring:message code="label.raciConsulted" /></h3>
+                            <p style="font-size: 13px; color: var(--text-secondary)"><spring:message code="label.raciConsultedDesc" /></p>
                         </div>
                         <div
                             style="
@@ -542,10 +540,8 @@ prefix="spring" %>
                                 border-radius: 8px;
                                 border: 1px solid var(--accent-blue);
                             ">
-                            <h3 style="color: var(--accent-blue); margin-bottom: 8px">I - Informed</h3>
-                            <p style="font-size: 13px; color: var(--text-secondary)">
-                                Person who needs to be informed of progress
-                            </p>
+                            <h3 style="color: var(--accent-blue); margin-bottom: 8px"><spring:message code="label.raciInformed" /></h3>
+                            <p style="font-size: 13px; color: var(--text-secondary)"><spring:message code="label.raciInformedDesc" /></p>
                         </div>
                     </div>
                 </div>
@@ -554,7 +550,7 @@ prefix="spring" %>
                     <table class="raci-matrix-table">
                         <thead>
                             <tr>
-                                <th style="min-width: 150px">Task</th>
+                                <th style="min-width: 150px"><spring:message code="label.task" /></th>
                             </tr>
                         </thead>
                         <tbody id="raciMatrixBody"></tbody>
@@ -564,11 +560,11 @@ prefix="spring" %>
             <div class="modal-footer bottom-actions mt-0" style="justify-content: end">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Close</span>
+                    <span><spring:message code="close" /></span>
                 </button>
                 <button type="button" class="btn action-btn" onclick="saveRACIMatrix()">
                     <span><i class="bi bi-floppy"></i></span>
-                    <span>Save</span>
+                    <span><spring:message code="save" /></span>
                 </button>
             </div>
         </div>
@@ -581,8 +577,8 @@ prefix="spring" %>
             <!-- Modal Header -->
             <div class="modal-header task-detail-header mb-0">
                 <div class="task-detail-title-section">
-                    <div class="task-detail-id">PPAP-001</div>
-                    <div class="task-detail-name">設計記錄</div>
+                    <div class="task-detail-id"></div>
+                    <div class="task-detail-name"></div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px">
                     <div class="task-action-buttons">
@@ -617,7 +613,7 @@ prefix="spring" %>
                             <span><i class="bi bi-pencil-square"></i></span>
                             <span><spring:message code="taskDescriptionTitle" /></span>
                         </div>
-                        <div class="section-content">此任務需要完成相關PPAP文件準備及品質標準</div>
+                        <div class="section-content"></div>
                     </div>
 
                     <div class="info-section">
@@ -629,7 +625,7 @@ prefix="spring" %>
                             <div class="attachment-item">
                                 <div class="attachment-info">
                                     <span class="attachment-icon"><i class="bi bi-file-earmark"></i></span>
-                                    <span class="attachment-name">設計規格書_v1.2.pdf</span>
+                                    <span class="attachment-name"></span>
                                 </div>
                                 <button class="download-btn">
                                     <span><i class="bi bi-download"></i> <spring:message code="download" /></span>
@@ -638,7 +634,7 @@ prefix="spring" %>
                             <div class="attachment-item">
                                 <div class="attachment-info">
                                     <span class="attachment-icon"><i class="bi bi-bar-chart-line"></i></span>
-                                    <span class="attachment-name">FMEA分析表.xlsx</span>
+                                    <span class="attachment-name"></span>
                                 </div>
                                 <button class="download-btn">
                                     <span><i class="bi bi-download"></i> <spring:message code="download" /></span>
@@ -663,9 +659,11 @@ prefix="spring" %>
                             <textarea
                                 id="input-comment"
                                 class="comment-textarea"
-                                placeholder="Enter your comment..."></textarea>
+                                placeholder="<spring:message code='placeholder.enterComment' />"></textarea>
                             <div class="comment-actions">
-                                <button id="comment" class="submit-comment-btn">Send comment</button>
+                                <button id="comment" class="submit-comment-btn">
+                                    <spring:message code="button.sendComment" />
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -673,17 +671,17 @@ prefix="spring" %>
 
                 <div class="task-sidebar">
                     <div class="sidebar-section d-flex flex-column">
-                        <span class="sidebar-label">Status</span>
+                        <span class="sidebar-label"><spring:message code="status" /></span>
                         <select id="sl-status" class="filter-input"></select>
                     </div>
 
                     <div class="sidebar-section d-flex flex-column">
-                        <span class="sidebar-label">DRI</span>
+                        <span class="sidebar-label"><spring:message code="dri" /></span>
                         <select id="dri" class="filter-input"></select>
                     </div>
 
                     <div class="sidebar-section d-flex flex-column">
-                        <span class="sidebar-label">Priority</span>
+                        <span class="sidebar-label"><spring:message code="priority" /></span>
                         <select id="sl-priority" class="filter-input"></select>
                     </div>
 
@@ -698,7 +696,7 @@ prefix="spring" %>
                     </div>
 
                     <div class="sidebar-section d-flex flex-column">
-                        <span class="sidebar-label">Type</span>
+                        <span class="sidebar-label"><spring:message code="label.type" /></span>
                         <select id="sl-type" class="filter-input"></select>
                     </div>
                 </div>
@@ -764,7 +762,7 @@ prefix="spring" %>
                             <label class="form-label">
                                 <spring:message code="projectName" /> <span class="required">*</span>
                             </label>
-                            <input type="text" class="form-input" id="newProjectName" placeholder="例: FTV-004" />
+                            <input type="text" class="form-input" id="newProjectName" placeholder="<spring:message code='placeholder.exampleProjectNumber' />" />
                         </div>
                     </div>
                 </div>
@@ -795,7 +793,7 @@ prefix="spring" %>
                     <div class="ppap-section">
                         <div class="section-header">
                             <span><i class="bi bi-list-ul"></i></span>
-                            <span>Selected task</span>
+                            <span><spring:message code="modal.selectedTasks" /></span>
                         </div>
                         <div
                             id="selectedTasksList"
@@ -807,7 +805,7 @@ prefix="spring" %>
                                 padding: 12px;
                                 border-radius: 6px;
                             ">
-                            <div style="color: var(--text-secondary)">No tasks selected.</div>
+                            <div style="color: var(--text-secondary)"><spring:message code="modal.noTasksSelected" /></div>
                         </div>
                     </div>
                 </div>
@@ -815,7 +813,7 @@ prefix="spring" %>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal" onclick="closeCreateProjectModal()">
                     <span><i class="bi bi-x-lg"></i></span>
-                    <span>Cancel</span>
+                    <span><spring:message code="cancel" /></span>
                 </button>
                 <button
                     type="button"
@@ -824,11 +822,11 @@ prefix="spring" %>
                     style="display: none"
                     onclick="createModalBackToStep1()">
                     <span><i class="bi bi-arrow-left"></i></span>
-                    <span>Cancel</span>
+                    <span><spring:message code="cancel" /></span>
                 </button>
                 <button type="button" class="primary-btn" id="createNextBtn" onclick="saveProjectBasicInfoModal()">
                     <span><i class="bi bi-floppy"></i></span>
-                    <span id="save-info">Save</span>
+                    <span id="save-info"><spring:message code="save" /></span>
                 </button>
                 <button
                     type="button"
@@ -837,7 +835,7 @@ prefix="spring" %>
                     style="display: none"
                     onclick="submitProjectFromModal()">
                     <span><i class="bi bi-check-circle"></i></span>
-                    <span>Save</span>
+                    <span><spring:message code="save" /></span>
                 </button>
             </div>
         </div>
