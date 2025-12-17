@@ -48,6 +48,20 @@ const DateFormatter = {
     },
 };
 
+function formatDateForFilterInput(value) {
+    if (!value) return '';
+    if (typeof value.format === 'function') return value.format('YYYY/MM/DD');
+    if (value instanceof Date) {
+        const year = value.getFullYear();
+        const month = ('0' + (value.getMonth() + 1)).slice(-2);
+        const day = ('0' + value.getDate()).slice(-2);
+        return `${year}/${month}/${day}`;
+    }
+    const str = String(value).trim();
+    const normalized = str.split(' ')[0].replace(/-/g, '/');
+    return normalized;
+}
+
 function escapeHtml(input) {
     if (input === null || input === undefined) return '';
     return String(input)
@@ -105,24 +119,40 @@ function getUserLabelById(idCard) {
     return normalized;
 }
 
+function normalizeStatus(status) {
+    if (!status) return '';
+    return String(status)
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, '_')
+        .replace(/-/g, '_');
+}
+
 function getStatusBadgeClass(status) {
+    const normalized = normalizeStatus(status);
     const statusMap = {
-        PENDING: 'status-pending',
-        IN_PROCESS: 'status-in-progress',
+        OPEN: 'status-pending',
+        PENDING: 'status-gray',
+        IN_PROGRESS: 'status-in-progress',
+        WAITING_FOR_APPROVAL: 'status-waiting',
         COMPLETED: 'status-completed',
+        OVERDUE: 'status-overdue',
+        // Legacy mappings
+        IN_PROCESS: 'status-in-progress',
         OVER_DUE: 'status-overdue',
+        CREATED: 'status-na',
+        RETURNED: 'status-overdue',
+        ON_GOING: 'status-pending',
+        CLOSED: 'status-completed',
     };
-    return statusMap[status] || 'status-pending';
+    return statusMap[normalized] || 'status-na';
 }
 
 function getStatusLabel(status) {
-    const labelMap = {
-        PENDING: 'Pending',
-        IN_PROCESS: 'In Progress',
-        COMPLETED: 'Completed',
-        OVER_DUE: 'Overdue',
-    };
-    return labelMap[status] || status;
+    const normalized = normalizeStatus(status);
+    if (!normalized) return 'N/A';
+    // Replace underscores with spaces, keep uppercase
+    return normalized.replace(/_/g, ' ');
 }
 
 function getPriorityBadgeClass(priority) {
@@ -132,8 +162,9 @@ function getPriorityBadgeClass(priority) {
 }
 
 function getPriorityLabel(priority) {
-    if (!priority) return 'Medium';
-    return priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+    if (!priority) return 'MEDIUM';
+    // Keep uppercase, replace underscores with spaces
+    return priority.replace(/_/g, ' ');
 }
 
 function populateDriSelectOptions(selectEl, selectedValue) {
@@ -161,7 +192,6 @@ function initDriSelect2(selectEl, dropdownParent) {
         return;
     }
 
-    // If the element is an INPUT, convert it to SELECT
     let targetEl = selectEl;
     if (selectEl.tagName === 'INPUT') {
         const currentVal = selectEl.value || '';
@@ -170,49 +200,36 @@ function initDriSelect2(selectEl, dropdownParent) {
         newSelect.className = selectEl.className;
         newSelect.name = selectEl.name || selectEl.id;
 
-        // Copy relevant attributes
         if (selectEl.dataset) {
             Object.keys(selectEl.dataset).forEach((key) => {
                 newSelect.dataset[key] = selectEl.dataset[key];
             });
         }
 
-        // Replace input with select
         selectEl.parentNode.replaceChild(newSelect, selectEl);
         targetEl = newSelect;
 
-        // Populate options
         populateDriSelectOptions(targetEl, currentVal);
     } else {
-        // Populate options for existing select
         const currentVal = selectEl.value || '';
         populateDriSelectOptions(targetEl, currentVal);
     }
 
     const $select = $(targetEl);
 
-    // Destroy existing select2 if any
     if ($select.data('select2')) {
         try {
             $select.select2('destroy');
         } catch (e) {}
     }
 
-    // Initialize select2 with search
-    const config = {
+    $select.select2({
         placeholder: 'Search user...',
         allowClear: true,
         width: '100%',
-    };
+        dropdownParent: dropdownParent ? $(dropdownParent) : $select.parent()
+    });
 
-    // Set dropdownParent to modal if provided (fixes dropdown appearing behind modal)
-    if (dropdownParent) {
-        config.dropdownParent = $(dropdownParent);
-    }
-
-    $select.select2(config);
-
-    // Restore value after select2 init
     const savedVal = targetEl.value || (selectEl !== targetEl ? selectEl.value : '') || '';
     if (savedVal) {
         $select.val(savedVal).trigger('change.select2');
@@ -224,7 +241,6 @@ async function loadUsersAndInitDriSelects() {
         USERS_CACHE = await fetchUsers();
     }
 
-    // Init filter-created-by in main page (không cần dropdownParent)
     const filterCreatedBy = document.getElementById('filter-created-by');
     if (filterCreatedBy) {
         initDriSelect2(filterCreatedBy, null);
@@ -811,6 +827,28 @@ const SELECT_CONFIGS = [
 
 const SELECT_CACHE = {};
 
+function getSelectNameById(cacheKey, id) {
+    if (id === null || id === undefined || id === '') return '';
+    const list = SELECT_CACHE[cacheKey] || [];
+    const normalized = String(id).trim();
+    const match = list.find((item) => {
+        if (!item || item.id === null || item.id === undefined) return false;
+        return String(item.id).trim() === normalized;
+    });
+    if (match) {
+        return match.name || match.label || '';
+    }
+    return '';
+}
+
+function getStageName(stageId) {
+    return getSelectNameById('/api/stages', stageId);
+}
+
+function getProcessName(processId) {
+    return getSelectNameById('/api/processes', processId);
+}
+
 async function fetchOptions(endpoint) {
     try {
         const res = await fetch(`/sample-system${endpoint}`);
@@ -1104,15 +1142,22 @@ function rangePicker($input, fromDate, toDate) {
         }
     }
 
-    const fallbackStart = new Date();
-    fallbackStart.setMonth(fallbackStart.getMonth() - 1);
+    const fallbackStart = window.moment
+        ? window.moment().subtract(3, 'months')
+        : new Date(new Date().setMonth(new Date().getMonth() - 3));
 
     $input.daterangepicker({
         startDate: start || fallbackStart,
-        endDate: end || new Date(),
+        endDate: end || (window.moment ? window.moment() : new Date()),
         autoApply: false,
         locale: {format: 'YYYY/MM/DD'},
     });
+
+    const startValue = formatDateForFilterInput(start || fallbackStart);
+    const endValue = formatDateForFilterInput(end || (window.moment ? window.moment() : new Date()));
+    if (typeof $input.val === 'function' && startValue && endValue) {
+        $input.val(`${startValue} - ${endValue}`);
+    }
 }
 
 function singlePicker($input, workDate) {
@@ -1188,7 +1233,10 @@ async function loadProjectList() {
 
     try {
         loader.load();
-        const res = await fetch('/sample-system/api/projects');
+        const params = buildProjectFilterParams();
+        const base = '/sample-system/api/projects';
+        const url = params.toString() ? base + '?' + params.toString() : base;
+        const res = await fetch(url);
         if (res.ok) {
             const json = await res.json();
             if (json.status === 'OK' && Array.isArray(json.data)) {
@@ -1400,7 +1448,9 @@ function renderProjectListUI() {
                     }')" style="cursor:pointer">
                     <td>${custName}</td>
                     <td><strong>${project.name}</strong></td>
-                    <td>${statusBadge}</td>
+                    <td>
+                        <div class="project-status-cell">${statusBadge}</div>
+                    </td>
                     <td>${getUserLabelById(project.createdBy)}</td>
                     <td>${
                         project.createdDate && typeof DateFormatter !== 'undefined'
@@ -1455,7 +1505,9 @@ function renderProjectListUI() {
                     }')" style="cursor:pointer">
                         <td>${custName}</td>
                         <td><strong>${project.name}</strong></td>
-                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="project-status-cell">${statusBadge}</div>
+                        </td>
                         <td>${getUserLabelById(project.createdBy)}</td>
                         <td>${
                             project.createdDate && typeof DateFormatter !== 'undefined'
@@ -1491,14 +1543,9 @@ function renderProjectListUI() {
 }
 
 function getStatusBadge(status) {
-    const badges = {
-        approved: '<span class="badge badge-success">已核准</span>',
-        rejected: '<span class="badge badge-danger">已拒絕</span>',
-        'in-progress': '<span class="badge badge-info">進行中</span>',
-        completed: '<span class="badge badge-primary">已完成</span>',
-        'on-hold': '<span class="badge badge-secondary">暫停</span>',
-    };
-    return badges[status] || `<span class="badge">${status}</span>`;
+    const statusClass = getStatusBadgeClass(status);
+    const label = getStatusLabel(status);
+    return `<span class="task-status-badge ${statusClass}">${escapeHtml(label)}</span>`;
 }
 
 function getCustomerDisplay(cust) {
@@ -1852,15 +1899,16 @@ function renderProjectTasksContent(tasks, projectId) {
             .map((t, index) => {
                 if (t) t.step = index + 1;
 
-                // Format status badge
                 const statusClass = getStatusBadgeClass(t.status);
                 const statusLabel = getStatusLabel(t.status);
-                const statusBadge = `<span class="task-status-badge ${statusClass}">${statusLabel}</span>`;
+                const statusBadge = `<span class="task-status-badge ${statusClass}">${escapeHtml(statusLabel)}</span>`;
 
-                // Format priority badge
                 const priorityClass = getPriorityBadgeClass(t.priority);
                 const priorityLabel = getPriorityLabel(t.priority);
-                const priorityBadge = `<span class="priority-badge ${priorityClass}">${priorityLabel}</span>`;
+                const priorityBadge = `<span class="priority-badge ${priorityClass}">${escapeHtml(priorityLabel)}</span>`;
+
+                const stageName = escapeHtml(getStageName(t.stageId) || '');
+                const processName = escapeHtml(getProcessName(t.processId) || '');
 
                 return `
             <tr draggable="true" 
@@ -1871,13 +1919,14 @@ function renderProjectTasksContent(tasks, projectId) {
                     <i class="bi bi-grip-vertical" title="Drag" aria-hidden="true"></i>
                 </td>
                 <td style="width:48px">${t.step || index + 1}</td>
-                <td>${t.taskCode || ''}</td>
-                <td>${t.name || ''}</td>
-                <td>${t.processId || ''}</td>
+                <td>${escapeHtml(t.taskCode || '')}</td>
+                <td>${escapeHtml(t.name || '')}</td>
+                <td>${stageName}</td>
+                <td>${processName}</td>
                 <td>${statusBadge}</td>
                 <td>${priorityBadge}</td>
-                <td>${t.dri || ''}</td>
-                <td>${t.dueDate || ''}</td>
+                <td>${escapeHtml(t.dri || '')}</td>
+                <td>${escapeHtml(t.dueDate || '')}</td>
                 <td style="text-align:center">
                     <button class="action-btn-sm" onclick="event.stopPropagation(); removeTaskFromProject('${projectId}', '${
                     t.id
@@ -1898,6 +1947,7 @@ function renderProjectTasksContent(tasks, projectId) {
                         <th>#</th>
                         <th>Task Number</th>
                         <th>Task Name</th>
+                        <th>Stage</th>
                         <th>Process</th>
                         <th>Status</th>
                         <th>Priority</th>
@@ -3669,8 +3719,34 @@ async function showRACIMatrixForProject(projectId) {
 
         loader.unload();
 
-        var bsModal = new bootstrap.Modal(modal);
+        const existingModals = document.querySelectorAll('.modal.show');
+        let maxZ = 1040;
+        
+        existingModals.forEach((m) => {
+            const z = parseInt(window.getComputedStyle(m).zIndex || '1040', 10);
+            if (z > maxZ) maxZ = z;
+        });
+
+        const newModalZ = maxZ + 20;
+        const newBackdropZ = maxZ + 10;
+
+        modal.style.zIndex = newModalZ;
+
+        const bsModal = new bootstrap.Modal(modal, {
+            backdrop: 'static',
+            keyboard: true
+        });
+        
         bsModal.show();
+
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 0) {
+                const lastBackdrop = backdrops[backdrops.length - 1];
+                lastBackdrop.style.zIndex = newBackdropZ;
+            }
+        }, 50);
+
     } catch (e) {
         loader.unload();
         console.error('Error showing RACI Matrix:', e);
