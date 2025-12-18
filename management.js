@@ -576,37 +576,49 @@ async function getComments(id) {
                 const author = it.createdBy || it.author || '-';
                 const date = it.createdAt || it.createAt || it.date || '-';
                 const content = it.content || it.cnContent || it.vnContent || '';
+                const type = it.type || 'COMMENT';
 
                 const safeAuthor = String(author);
                 const safeDate = String(date);
                 const safeContent = String(content);
 
-                const isSystemUpdate = safeContent.startsWith('Task updated:');
-
-                if (isSystemUpdate) {
-                    const changes = parseTaskUpdates(safeContent);
+                // Render LOG type
+                if (type === 'LOG') {
                     return `
-                        <div class="update-log-item ml-1" style="font-size:0.85rem; font-style: italic; opacity: 0.65;">
-                            <span class="update-label">Updated:</span>
-                            <span class="update-changes">${escapeHtml(changes)}</span>
-                            <span class="update-separator">-</span>
-                            <span class="update-author">${escapeHtml(safeAuthor)}</span>
-                            <span class="update-separator">-</span>
-                            <span class="update-date">${escapeHtml(safeDate)}</span>
-                        </div>`;
+                        <div class="log-item" style="display: flex; gap: 12px; margin-bottom:0; margin-left: 1rem;">
+                            <div class="log-avatar" style="flex-shrink: 0;">
+                                <div class="comment-avatar"><i class="bi bi-person"></i></div>
+                            </div>
+                            <div class="log-content" style="flex-grow: 1;">
+                                <div class="log-line-1" style="font-size: 0.9rem; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
+                                    <span style="margin: 0 6px; color: var(--text-secondary);">-</span>
+                                    <span style="color: var(--text-secondary);">${escapeHtml(safeContent)}</span>
+                                </div>
+                                <div class="log-line-2" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                                    ${escapeHtml(safeDate)}
+                                </div>
+                            </div>
+                        </div>
+                        <br />`;
                 }
 
+                // Render COMMENT type
                 return `
-                <div class="comment-item">
-                    <div class="comment-header">
+                <div class="comment-item" style="display: flex; gap: 12px; margin-bottom:0.5rem; margin-left: 1rem;">
+                    <div class="comment-avatar" style="flex-shrink: 0;">
                         <div class="comment-avatar"><i class="bi bi-person"></i></div>
-                        <div>
-                            <div class="comment-author">${escapeHtml(safeAuthor)}</div>
-                            <div class="comment-date">${escapeHtml(safeDate)}</div>
+                    </div>
+                    <div class="comment-content" style="flex-grow: 1;">
+                        <div class="comment-text" style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 4px;">${escapeHtml(safeContent)}</div>
+                        <div class="comment-meta" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                            <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
+                            <span style="margin: 0 6px;">-</span>
+                            <span>${escapeHtml(safeDate)}</span>
                         </div>
                     </div>
-                    <div class="comment-text">${escapeHtml(safeContent)}</div>
-                </div>`;
+                </div>
+                <br />`;
             })
             .join('');
 
@@ -1009,15 +1021,23 @@ async function loadAllSelects() {
     }
 }
 
-async function createProject(customerId, name) {
+async function createProject(customerId, name, model) {
     const c =
         customerId ||
         (document.getElementById('newProjectCustomer') && document.getElementById('newProjectCustomer').value);
     const n = name || (document.getElementById('newProjectName') && document.getElementById('newProjectName').value);
+    const fallbackModel =
+        model !== undefined && model !== null
+            ? model
+            : (document.getElementById('newProjectProduct') && document.getElementById('newProjectProduct').value);
+    const normalizedModel = fallbackModel ? String(fallbackModel).trim() : '';
 
     if (!c || !n) return null;
 
     const payload = {customerId: mapCustomerToId(c), name: n};
+    if (normalizedModel) {
+        payload.model = normalizedModel;
+    }
 
     try {
         const res = await fetch('/sample-system/api/projects/create', {
@@ -1036,10 +1056,12 @@ async function createProject(customerId, name) {
                 return null;
             }
 
+            const returnedModel = returned.model || normalizedModel || null;
             return {
                 id: returned.id,
                 customer: returned.customerId || c,
                 name: returned.name || n,
+                model: returnedModel,
                 createdDate: returned.createdAt
                     ? returned.createdAt.split(' ')[0]
                     : new Date().toISOString().split('T')[0],
@@ -1103,7 +1125,7 @@ async function ensureProjectPersisted(project) {
     }
 
     try {
-        const created = await createProject(project.customer, project.name);
+        const created = await createProject(project.customer, project.name, project.model);
         if (created && created.id && !String(created.id).startsWith('TEMP-')) {
             project.id = created.id;
             return project.id;
@@ -1836,9 +1858,11 @@ async function showProjectTasksModal(projectId) {
             if (footer && !rejectBtn) {
                 rejectBtn = document.createElement('button');
                 rejectBtn.id = 'pt_reject_btn';
-                rejectBtn.className = 'btn secondary-btn';
+                rejectBtn.className = 'btn action-btn';
                 rejectBtn.type = 'button';
                 rejectBtn.innerHTML = '<i class="bi bi-x-circle"></i> Reject';
+                rejectBtn.style.backgroundColor = '#dc3545';
+                rejectBtn.style.color = 'white';
                 rejectBtn.style.display = 'none';
                 rejectBtn.addEventListener('click', function (ev) {
                     ev.stopPropagation();
@@ -1941,6 +1965,7 @@ function renderProjectTasksContent(tasks, projectId) {
 
                 const stageName = escapeHtml(getStageName(t.stageId) || '');
                 const processName = escapeHtml(getProcessName(t.processId) || '');
+                const driDisplay = escapeHtml(getUserLabelById(t.dri) || t.dri || '');
 
                 return `
             <tr draggable="true" 
@@ -1957,7 +1982,7 @@ function renderProjectTasksContent(tasks, projectId) {
                 <td>${processName}</td>
                 <td>${statusBadge}</td>
                 <td>${priorityBadge}</td>
-                <td>${escapeHtml(t.dri || '')}</td>
+                <td>${driDisplay}</td>
                 <td>${escapeHtml(t.dueDate || '')}</td>
                 <td style="text-align:center">
                     <button class="action-btn-sm" onclick="event.stopPropagation(); removeTaskFromProject('${projectId}', '${
@@ -2317,6 +2342,15 @@ async function showTaskDetailModal(projectId, taskId) {
             console.warn('Failed to set status/priority selects in task detail modal', e);
         }
 
+        // Wire submit/reject/approve workflow + toggle buttons based on current status
+        try {
+            wireTaskDetailWorkflowActions(modalRoot);
+            const statusVal = getTaskDetailStatusValue(modalRoot) || task.status;
+            updateTaskDetailFooterButtons(modalRoot, statusVal);
+        } catch (e) {
+            console.warn('Failed to initialize task workflow buttons', e);
+        }
+
         try {
             const anyOtherModalOpen = document.querySelectorAll('.modal.show').length > 0;
 
@@ -2599,22 +2633,77 @@ async function saveTaskDetailChanges() {
         }
 
         try {
-            safeHideModal(modalRoot);
-        } catch (e) {
-            try {
-                bootstrap.Modal.getInstance(modalRoot).hide();
-            } catch (err) {
-                modalRoot.classList.remove('active');
+            const statusBadge = modalRoot.querySelector('.task-status-badge');
+            const priorityBadge = modalRoot.querySelector('.priority-badge');
+            if (statusBadge) {
+                statusBadge.textContent = getStatusLabel(updatedTask.status);
+                statusBadge.className = `task-status-badge ${getStatusBadgeClass(updatedTask.status)}`;
             }
+            if (priorityBadge) {
+                priorityBadge.textContent = getPriorityLabel(updatedTask.priority);
+                priorityBadge.className = `priority-badge ${getPriorityBadgeClass(updatedTask.priority)}`;
+            }
+
+            const dateDisplay = modalRoot.querySelector('.date-display');
+            if (dateDisplay) {
+                dateDisplay.textContent = updatedTask.dueDate || updatedTask.deadline || '-';
+            }
+
+            const assigneeDisplay = modalRoot.querySelector('.assignee-name');
+            if (assigneeDisplay) {
+                assigneeDisplay.textContent = getUserLabelById(updatedTask.dri) || '-';
+            }
+
+            const statusSelect = modalRoot.querySelector('#sl-status');
+            const prioritySelect = modalRoot.querySelector('#sl-priority');
+            if (statusSelect) {
+                statusSelect.value = updatedTask.status || (updatedTask.status === null ? 'N/A' : '');
+            }
+            if (prioritySelect) {
+                prioritySelect.value = updatedTask.priority || (updatedTask.priority === null ? 'N/A' : '');
+            }
+
+            const driInput = document.getElementById('dri');
+            if (driInput) {
+                driInput.value = updatedTask.dri || '';
+                if (window.jQuery && $(driInput).data('select2')) {
+                    $(driInput).val(updatedTask.dri || '').trigger('change');
+                }
+            }
+
+            const deadlineInput = document.getElementById('deadLine');
+            if (deadlineInput) {
+                const normalized = updatedTask.dueDate
+                    ? DateFormatter.toDisplayFormat(updatedTask.dueDate)
+                    : updatedTask.deadline
+                    ? DateFormatter.toDisplayFormat(updatedTask.deadline)
+                    : '';
+                deadlineInput.value = normalized;
+                deadlineInput.dataset.initialValue = normalized;
+            }
+
+            try {
+                currentTaskDetailObj = JSON.parse(JSON.stringify(updatedTask));
+            } catch (e) {
+                currentTaskDetailObj = updatedTask;
+            }
+
+            if (projectId) {
+                const project = findProjectById(projectId);
+                if (project) {
+                    renderProjectTasksContent(project.tasks || [], projectId);
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to refresh modal after update', e);
         }
+
+        // Toggle workflow buttons after status update
+        try {
+            updateTaskDetailFooterButtons(modalRoot, updatedTask.status);
+        } catch (e) {}
 
         showAlertSuccess('Success', 'Task updated successfully');
-
-        try {
-            if (projectId) showProjectTasksModal(projectId);
-        } catch (e) {
-            /* ignore */
-        }
     } catch (e) {
         console.error('Failed to call update API', e);
         showAlertError('Failed', 'Failed to update task: ' + e.message);
@@ -2622,6 +2711,278 @@ async function saveTaskDetailChanges() {
 }
 
 window.saveTaskDetailChanges = saveTaskDetailChanges;
+
+function getTaskDetailStatusValue(modalRoot) {
+    if (!modalRoot) return null;
+    const sel = modalRoot.querySelector('#sl-status') || modalRoot.querySelector('#modal-sl-status');
+    return sel ? sel.value : null;
+}
+
+function isInProgressStatus(statusVal) {
+    if (statusVal === null || statusVal === undefined) return false;
+    const s = String(statusVal).trim().toLowerCase();
+    if (!s) return false;
+    return s === 'in_progress' || s === 'in-progress' || s.includes('progress');
+}
+
+function isWaitingForApprovalStatus(statusVal) {
+    if (statusVal === null || statusVal === undefined) return false;
+    const s = String(statusVal).trim().toLowerCase();
+    if (!s) return false;
+    if (s === 'waiting_for_approval' || s === 'waiting-for-approval') return true;
+    if (s === 'waiting') return true;
+    return s.includes('waiting') && s.includes('approval');
+}
+
+function updateTaskDetailFooterButtons(modalRoot, statusVal) {
+    if (!modalRoot) return;
+
+    const btnSubmit = modalRoot.querySelector('.js-task-submit');
+    const btnReject = modalRoot.querySelector('.js-task-reject');
+    const btnApprove = modalRoot.querySelector('.js-task-approve');
+    const btnSave = modalRoot.querySelector('.js-task-save');
+
+    const waiting = isWaitingForApprovalStatus(statusVal);
+    const inProgress = isInProgressStatus(statusVal);
+
+    if (btnSubmit) btnSubmit.classList.toggle('d-none', !inProgress);
+    if (btnSave) btnSave.classList.toggle('d-none', waiting);
+    if (btnReject) btnReject.classList.toggle('d-none', !waiting);
+    if (btnApprove) btnApprove.classList.toggle('d-none', !waiting);
+}
+
+async function fetchTaskById(taskId) {
+    const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}`);
+    if (!res.ok) throw new Error(`Failed to fetch task: ${res.status}`);
+    const json = await res.json();
+    return json.data || json.result || null;
+}
+
+function applyTaskToDetailModal(modalRoot, task) {
+    if (!modalRoot || !task) return;
+
+    try {
+        modalRoot.dataset.taskId = String(task.id || modalRoot.dataset.taskId || '');
+        if (task.projectId !== undefined && task.projectId !== null) {
+            modalRoot.dataset.projectId = String(task.projectId);
+        }
+    } catch (e) {}
+
+    const setText = (selector, value) => {
+        const el = modalRoot.querySelector(selector);
+        if (el) el.textContent = value || '';
+    };
+
+    setText('.task-detail-id', task.taskCode || String(task.id || ''));
+    setText('.task-detail-name', task.name || '');
+
+    const descEl = modalRoot.querySelector('.section-content');
+    if (descEl) descEl.textContent = task.description || '';
+
+    setText('.date-display', task.dueDate || task.deadline || '-');
+    setText('.assignee-name', getUserLabelById(task.dri) || task.dri || task.assignee || '-');
+
+    const statusBadge = modalRoot.querySelector('.task-status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = getStatusLabel(task.status);
+        statusBadge.className = `task-status-badge ${getStatusBadgeClass(task.status)}`;
+    }
+
+    const priorityBadge = modalRoot.querySelector('.priority-badge');
+    if (priorityBadge) {
+        priorityBadge.textContent = getPriorityLabel(task.priority);
+        priorityBadge.className = `priority-badge ${getPriorityBadgeClass(task.priority)}`;
+    }
+
+    const statusSelect = modalRoot.querySelector('#sl-status') || modalRoot.querySelector('#modal-sl-status');
+    if (statusSelect) {
+        const val = task.status === null || task.status === undefined || String(task.status).trim() === '' ? 'N/A' : String(task.status);
+        const hasOption = Array.from(statusSelect.options).some((o) => String(o.value) === val);
+        if (!hasOption) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = val;
+            if (statusSelect.options.length > 0) statusSelect.add(opt, statusSelect.options[0]);
+            else statusSelect.add(opt);
+        }
+        statusSelect.value = val;
+    }
+
+    const prioritySelect = modalRoot.querySelector('#sl-priority') || modalRoot.querySelector('#modal-sl-priority');
+    if (prioritySelect) {
+        const val = task.priority === null || task.priority === undefined || String(task.priority).trim() === '' ? 'N/A' : String(task.priority);
+        const hasOption = Array.from(prioritySelect.options).some((o) => String(o.value) === val);
+        if (!hasOption) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = val;
+            if (prioritySelect.options.length > 0) prioritySelect.add(opt, prioritySelect.options[0]);
+            else prioritySelect.add(opt);
+        }
+        prioritySelect.value = val;
+    }
+
+    const driSelect = document.getElementById('dri');
+    if (driSelect) {
+        driSelect.value = task.dri || '';
+        if (window.jQuery && $(driSelect).data('select2')) {
+            $(driSelect).val(task.dri || '').trigger('change');
+        }
+    }
+
+    const deadlineInput = document.getElementById('deadLine');
+    if (deadlineInput) {
+        const normalized = task.dueDate ? DateFormatter.toDisplayFormat(task.dueDate) : task.deadline ? DateFormatter.toDisplayFormat(task.deadline) : '';
+        deadlineInput.value = normalized;
+        deadlineInput.dataset.initialValue = normalized;
+    }
+
+    try {
+        currentTaskDetailObj = JSON.parse(JSON.stringify(task));
+    } catch (e) {
+        currentTaskDetailObj = task;
+    }
+}
+
+function wireTaskDetailWorkflowActions(modalRoot) {
+    if (!modalRoot) return;
+    if (modalRoot.dataset.workflowWired === '1') return;
+    modalRoot.dataset.workflowWired = '1';
+
+    const statusSelect = modalRoot.querySelector('#sl-status') || modalRoot.querySelector('#modal-sl-status');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function () {
+            updateTaskDetailFooterButtons(modalRoot, this.value);
+        });
+    }
+
+    const withDisabled = async (btn, fn) => {
+        if (!btn) return fn();
+        const prev = btn.disabled;
+        btn.disabled = true;
+        try {
+            return await fn();
+        } finally {
+            btn.disabled = prev;
+        }
+    };
+
+    const postAction = async (action) => {
+        const taskId = modalRoot.dataset.taskId;
+        if (!taskId) {
+            showAlertError('Error', 'Task ID is required');
+            return;
+        }
+
+        try {
+            if (typeof loader !== 'undefined' && loader && typeof loader.load === 'function') loader.load();
+
+            const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}/${action}`, {
+                method: 'POST',
+            });
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                console.warn(`Task ${action} failed`, res.status, res.statusText, text);
+                showAlertError('Failed', `Failed to ${action} task. Server returned ${res.status}`);
+                return;
+            }
+
+            const updated = await fetchTaskById(taskId);
+            if (updated) {
+                applyTaskToDetailModal(modalRoot, updated);
+                updateTaskDetailFooterButtons(modalRoot, updated.status);
+
+                const projectId = modalRoot.dataset.projectId;
+                if (projectId && projectList && Array.isArray(projectList)) {
+                    const proj = projectList.find((p) => String(p.id) === String(projectId));
+                    if (proj && Array.isArray(proj.tasks)) {
+                        const idx = proj.tasks.findIndex((t) => String(t.id) === String(taskId));
+                        if (idx !== -1) {
+                            proj.tasks[idx] = {...proj.tasks[idx], ...updated};
+                        }
+                    }
+                }
+
+                if (projectId) {
+                    const project = findProjectById(projectId);
+                    if (project) renderProjectTasksContent(project.tasks || [], projectId);
+                }
+
+                try {
+                    await getComments(taskId);
+                } catch (e) {}
+            }
+
+            showAlertSuccess('Success', `Task ${action} successfully`);
+        } catch (e) {
+            console.error(`Task ${action} error`, e);
+            showAlertError('Failed', `Failed to ${action} task`);
+        } finally {
+            if (typeof loader !== 'undefined' && loader && typeof loader.unload === 'function') loader.unload();
+        }
+    };
+
+    const btnSubmit = modalRoot.querySelector('.js-task-submit');
+    const btnReject = modalRoot.querySelector('.js-task-reject');
+    const btnApprove = modalRoot.querySelector('.js-task-approve');
+
+    if (btnSubmit) {
+        btnSubmit.addEventListener('click', function () {
+            return withDisabled(btnSubmit, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Submit task',
+                        text: 'Are you sure you want to submit this task?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Submit',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('submit');
+            });
+        });
+    }
+
+    if (btnReject) {
+        btnReject.addEventListener('click', function () {
+            return withDisabled(btnReject, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Reject task',
+                        text: 'Are you sure you want to reject this task?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Reject',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('reject');
+            });
+        });
+    }
+
+    if (btnApprove) {
+        btnApprove.addEventListener('click', function () {
+            return withDisabled(btnApprove, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Approve task',
+                        text: 'Are you sure you want to approve this task?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Approve',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('approve');
+            });
+        });
+    }
+}
 
 async function saveProjectTaskQuantity() {
     const pidEl = getEl('pt_detail_projectId');
@@ -2783,6 +3144,20 @@ async function projectTasksSubmit() {
     const projectId = parseInt(pidEl.value, 10);
     if (isNaN(projectId)) {
         showAlertWarning('Warning', 'Invalid project ID');
+        return;
+    }
+
+    // Show confirmation dialog
+    const result = await Swal.fire({
+        title: 'Submit Project',
+        text: 'Are you sure you want to submit this project?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Submit',
+        cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
@@ -2960,15 +3335,19 @@ function closeCreateProjectModal() {
 async function saveProjectBasicInfoModal() {
     const customer = document.getElementById('newProjectCustomer').value;
     const name = document.getElementById('newProjectName').value;
+    const product = document.getElementById('newProjectProduct').value.trim();
 
-    if (!customer || !name) {
-        showAlertWarning('Warning', 'Please fill all required fields (Customer, Project Name)');
+    if (!customer || !name || !product) {
+        showAlertWarning(
+            'Warning',
+            'Please fill all required fields (Customer, Project Name, Product)'
+        );
         return;
     }
 
     const customerName = getCustomerDisplay(customer);
 
-    const created = await createProject(customer, name);
+    const created = await createProject(customer, name, product);
 
     if (!created) {
         showAlertError('Failed', 'Please try again.');
@@ -2983,6 +3362,7 @@ async function saveProjectBasicInfoModal() {
         status: created.status || 'draft',
         taskCount: 0,
         tasks: [],
+        model: created.model || product,
     };
 
     const existingIndex = projectList.findIndex((p) => String(p.id) === String(currentProject.id));
@@ -3243,9 +3623,10 @@ function handleTaskDragEnd(e) {
 function saveProjectBasicInfo() {
     const customer = document.getElementById('newProjectCustomer').value;
     const name = document.getElementById('newProjectName').value;
+    const product = document.getElementById('newProjectProduct').value.trim();
 
-    if (!customer || !name) {
-        showAlertWarning('Warning', 'Please fill all required fields (Customer, Project Name)');
+    if (!customer || !name || !product) {
+        showAlertWarning('Warning', 'Please fill all required fields (Customer, Project Name, Product)');
         return;
     }
 
@@ -3256,6 +3637,7 @@ function saveProjectBasicInfo() {
         createdDate: new Date().toISOString().split('T')[0],
         status: 'draft',
         taskCount: 0,
+        model: product,
     };
 
     safeSetDisplay('createProjectSection', 'none');
@@ -3290,7 +3672,7 @@ async function submitProject() {
     if (currentProject.id && !String(currentProject.id).startsWith('TEMP-')) {
         resolvedId = currentProject.id;
     } else {
-        const created = await createProject(currentProject.customer, currentProject.name);
+        const created = await createProject(currentProject.customer, currentProject.name, currentProject.model);
         if (created && created.id) {
             currentProject.id = created.id;
             resolvedId = created.id;
@@ -3915,7 +4297,16 @@ function saveRACIMatrix() {
 }
 
 async function approveProject(projectId) {
-    if (!confirm('Are you sure you want to approve this project?')) return;
+    const result = await Swal.fire({
+        title: 'Approve Project',
+        text: 'Are you sure you want to approve this project?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Cancel'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await fetch('/sample-system/api/projects/approve?id=' + encodeURIComponent(projectId), {
@@ -3948,7 +4339,17 @@ async function approveProject(projectId) {
 }
 
 async function rejectProject(projectId) {
-    if (!confirm('Are you sure you want to reject this project?')) return;
+    const result = await Swal.fire({
+        title: 'Reject Project',
+        text: 'Are you sure you want to reject this project?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc3545'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
         const res = await fetch('/sample-system/api/projects/return?id=' + encodeURIComponent(projectId), {
