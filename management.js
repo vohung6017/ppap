@@ -1174,6 +1174,7 @@ async function ensureProjectPersisted(project) {
 let currentProject = null;
 let projectList = [];
 let selectedPPAPItems = [];
+let allTemplateIds = new Set();
 let createModalOriginalTitleHTML = null;
 let currentTaskDetailObj = null;
 
@@ -3761,6 +3762,7 @@ async function showStandardPPAP() {
             status: item.status || '',
             priority: item.priority || '',
         }));
+        allTemplateIds = new Set(tasks.map((t) => String(t.id)));
     } catch (e) {
         console.warn('Failed to fetch PPAP templates, falling back to local list:', e);
         tasks = standardPPAPTasks;
@@ -3942,7 +3944,7 @@ function confirmPPAPSelection() {
         return;
     }
 
-    selectedPPAPItems = checked.map((cb) => {
+    const selectedTemplateTasks = checked.map((cb) => {
         const card = cb.closest('.ppap-task-card');
         const info = card ? card.querySelector('.ppap-task-info') : null;
         const nameEl = info ? info.querySelector('.ppap-task-name') : null;
@@ -3957,22 +3959,77 @@ function confirmPPAPSelection() {
             description: descEl ? descEl.textContent.trim() : '',
             status: status,
             priority: priority,
+            isTemplate: true,
+            parentId: String(cb.value),
         };
     });
 
-    showAlertSuccess('Success', `Selected ${selectedPPAPItems.length} PPAP items`);
+    let existingTasks = [];
+    const pidEl = getEl('pt_detail_projectId');
+    if (pidEl && pidEl.value) {
+        const project = projectList.find((p) => String(p.id) === String(pidEl.value));
+        if (project && Array.isArray(project.tasks)) {
+            existingTasks = project.tasks.slice();
+        }
+    } else if (currentProject && Array.isArray(currentProject.tasks)) {
+        existingTasks = currentProject.tasks.slice();
+    }
+
+    const existingTemplateIds = new Set();
+    existingTasks.forEach((t) => {
+        if (!t) return;
+        if (t.parentId != null) {
+            existingTemplateIds.add(String(t.parentId));
+        }
+        if (allTemplateIds.has(String(t.id))) {
+            existingTemplateIds.add(String(t.id));
+        }
+    });
+
+    const newTemplates = selectedTemplateTasks.filter((t) => {
+        const templateId = String(t.id);
+        return !existingTemplateIds.has(templateId);
+    });
+
+    const selectedTemplateIds = new Set(selectedTemplateTasks.map((t) => String(t.id)));
+    const keptExistingTasks = existingTasks.filter((t) => {
+        if (!t) return false;
+        const taskParentId = t.parentId != null ? String(t.parentId) : null;
+        const isExistingTemplate = taskParentId && allTemplateIds.has(taskParentId);
+        const isDirectTemplate = allTemplateIds.has(String(t.id));
+        
+        if (isExistingTemplate) {
+            return selectedTemplateIds.has(taskParentId);
+        } else if (isDirectTemplate) {
+            return selectedTemplateIds.has(String(t.id));
+        }
+        return true;
+    });
+
+    const mergedTasks = [...keptExistingTasks, ...newTemplates];
+
+    mergedTasks.forEach((task, idx) => {
+        if (task) task.step = idx + 1;
+    });
+
+    selectedPPAPItems = mergedTasks;
+
+    const addedCount = newTemplates.length;
+    const message = addedCount > 0 
+        ? `Added ${addedCount} new PPAP items (total: ${mergedTasks.length} tasks)`
+        : `No new items added (total: ${mergedTasks.length} tasks)`;
+    showAlertSuccess('Success', message);
 
     renderSelectedTasksInModal();
 
     const projectTasksModal = document.getElementById('projectTasksModal');
     if (projectTasksModal && projectTasksModal.classList.contains('show')) {
-        const pidEl = getEl('pt_detail_projectId');
         if (pidEl && pidEl.value) {
             const project = projectList.find((p) => String(p.id) === String(pidEl.value));
             if (project) {
-                project.tasks = selectedPPAPItems.slice();
-                project.taskCount = selectedPPAPItems.length;
-                renderProjectTasksContent(selectedPPAPItems, project.id);
+                project.tasks = mergedTasks.slice();
+                project.taskCount = mergedTasks.length;
+                renderProjectTasksContent(mergedTasks, project.id);
             }
         }
     }
@@ -3980,8 +4037,8 @@ function confirmPPAPSelection() {
     closeStandardPPAP();
 
     if (currentProject) {
-        currentProject.tasks = selectedPPAPItems.slice();
-        currentProject.taskCount = selectedPPAPItems.length;
+        currentProject.tasks = mergedTasks.slice();
+        currentProject.taskCount = mergedTasks.length;
     }
 }
 
