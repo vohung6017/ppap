@@ -585,40 +585,39 @@ async function getComments(id) {
                 // Render LOG type
                 if (type === 'LOG') {
                     return `
-                        <div class="log-item" style="display: flex; gap: 12px; margin-bottom:0; margin-left: 1rem;">
+                        <div class="log-item m-0" style="display: flex; gap: 12px; margin-bottom:0; margin-left: 1rem;">
                             <div class="log-avatar" style="flex-shrink: 0;">
                                 <div class="comment-avatar"><i class="bi bi-person"></i></div>
                             </div>
                             <div class="log-content" style="flex-grow: 1;">
                                 <div class="log-line-1" style="font-size: 0.9rem; margin-bottom: 4px;">
                                     <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
-                                    <span style="margin: 0 6px; color: var(--text-secondary);">-</span>
-                                    <span style="color: var(--text-secondary);">${escapeHtml(safeContent)}</span>
+                                    <span>${escapeHtml(safeContent)}</span>
                                 </div>
-                                <div class="log-line-2" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                                <div class="log-line-2 comment-text" style="font-size: 0.85rem;">
                                     ${escapeHtml(safeDate)}
                                 </div>
                             </div>
                         </div>
-                        <br />`;
+                        <hr class="comment-hr" />`;
                 }
 
                 // Render COMMENT type
                 return `
-                <div class="comment-item" style="display: flex; gap: 12px; margin-bottom:0.5rem; margin-left: 1rem;">
+                <div class="comment-item p-0" style="display: flex; gap: 12px; background: transparent; border: none;">
                     <div class="comment-avatar" style="flex-shrink: 0;">
                         <div class="comment-avatar"><i class="bi bi-person"></i></div>
                     </div>
                     <div class="comment-content" style="flex-grow: 1;">
-                        <div class="comment-text" style="background: var(--bg-secondary); padding: 12px; border-radius: 8px; margin-bottom: 4px;">${escapeHtml(safeContent)}</div>
-                        <div class="comment-meta" style="font-size: 0.85rem; color: var(--text-tertiary);">
+                        <div class="comment-meta" style="font-size: 0.9rem; margin-bottom: 6px;">
                             <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
-                            <span style="margin: 0 6px;">-</span>
-                            <span>${escapeHtml(safeDate)}</span>
+                            <span style="margin: 0 6px; color: var(--text-secondary);">-</span>
+                            <span style="color: var(--text-secondary);">${escapeHtml(safeDate)}</span>
                         </div>
+                        <div class="comment-item" style="display: inline-block; background: var(--secondary-bg); padding: 0.65rem; border-radius: 8px; white-space: pre-wrap;">${escapeHtml(safeContent)}</div>
                     </div>
                 </div>
-                <br />`;
+                <hr class="comment-hr" />`;
             })
             .join('');
 
@@ -1334,6 +1333,12 @@ function buildProjectFilterParams() {
                 : '';
         if (customerId) params.append('customerId', customerId);
 
+        const model =
+            document.getElementById('filter-model') && document.getElementById('filter-model').value
+                ? document.getElementById('filter-model').value.trim()
+                : '';
+        if (model) params.append('model', model);
+
         const createBy =
             document.getElementById('filter-created-by') && document.getElementById('filter-created-by').value
                 ? document.getElementById('filter-created-by').value.trim()
@@ -1442,7 +1447,7 @@ function clearAdvancedFilters() {
             });
         }
 
-        const extraIds = ['ppapFilterProject', 'projectCustomerSelect', 'filter-created-by', 'filter-created-date'];
+        const extraIds = ['ppapFilterProject', 'projectCustomerSelect', 'filter-model', 'filter-created-by', 'filter-created-date'];
 
         extraIds.forEach((id) => {
             try {
@@ -1488,21 +1493,23 @@ function renderProjectListUI() {
     if (waitingBody) {
         if (waitingProjects.length === 0) {
             waitingBody.innerHTML = `
-                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="10" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     目前沒有等待審核的專案
                 </td></tr>
             `;
         } else {
             waitingBody.innerHTML = waitingProjects
-                .map((project) => {
+                .map((project, index) => {
                     const custName = getCustomerDisplay(project.customer);
                     const statusBadge = getStatusBadge(project.status);
                     return `
                 <tr data-project-id="${project.id}" data-section="waiting" onclick="showProjectTasksModal('${
                         project.id
                     }')" style="cursor:pointer">
+                    <td>${index + 1}</td>
                     <td>${custName}</td>
-                    <td><strong>${project.name}</strong></td>
+                    <td>${project.name}</td>
+                    <td>${project.model || 'N/A'}</td>
                     <td>
                         <div class="project-status-cell">${statusBadge}</div>
                     </td>
@@ -1545,21 +1552,23 @@ function renderProjectListUI() {
     if (otherBody) {
         if (otherProjects.length === 0) {
             otherBody.innerHTML = `
-                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                <tr><td colspan="10" style="text-align: center; color: var(--text-secondary); padding: 20px;">
                     No Data!
                 </td></tr>
             `;
         } else {
             otherBody.innerHTML = otherProjects
-                .map((project) => {
+                .map((project, index) => {
                     const statusBadge = getStatusBadge(project.status);
                     const custName = getCustomerDisplay(project.customer);
                     return `
                     <tr data-project-id="${project.id}" data-section="other" onclick="showProjectTasksModal('${
                         project.id
                     }')" style="cursor:pointer">
+                        <td>${index + 1}</td>
                         <td>${custName}</td>
-                        <td><strong>${project.name}</strong></td>
+                        <td>${project.name}</td>
+                        <td>${project.model || 'N/A'}</td>
                         <td>
                             <div class="project-status-cell">${statusBadge}</div>
                         </td>
@@ -2237,10 +2246,100 @@ async function showTaskDetailModal(projectId, taskId) {
             if (el) el.textContent = value || '';
         };
 
+        // Make task name editable on click
+        const taskNameEl = modalRoot.querySelector('.task-detail-name');
+        if (taskNameEl) {
+            taskNameEl.textContent = task.name || '';
+            taskNameEl.style.cursor = 'pointer';
+            taskNameEl.title = 'Click to edit';
+            taskNameEl.onclick = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                const currentValue = this.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.className = 'task-name-edit-input';
+                input.style.cssText = 'width: 100%; font-size: inherit; font-weight: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 1px solid var(--border-color); outline: none; padding: 4px 8px; border-radius: 4px;';
+                
+                const saveEdit = () => {
+                    this.textContent = input.value || currentValue;
+                    this.style.display = '';
+                    input.remove();
+                };
+                
+                input.onblur = saveEdit;
+                input.onkeydown = (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveEdit();
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        this.textContent = currentValue;
+                        this.style.display = '';
+                        input.remove();
+                    }
+                };
+                
+                this.style.display = 'none';
+                this.parentNode.insertBefore(input, this.nextSibling);
+                input.focus();
+                input.select();
+            };
+        }
+
         setText('.task-detail-id', task.taskCode || String(task.id || ''));
-        setText('.task-detail-name', task.name || '');
+
+        // Make description editable on click
         const descEl = modalRoot.querySelector('.section-content');
-        if (descEl) descEl.textContent = task.description || '';
+        if (descEl) {
+            descEl.textContent = task.description || '';
+            descEl.style.cursor = 'pointer';
+            descEl.title = 'Click to edit';
+            descEl.onclick = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                const currentValue = this.textContent;
+                const textarea = document.createElement('textarea');
+                textarea.value = currentValue;
+                textarea.className = 'task-desc-edit-input';
+                textarea.style.cssText = 'width: 100%; min-height: 100px; font-size: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 1px solid var(--border-color); outline: none; padding: 8px; border-radius: 4px; resize: vertical;';
+                
+                let isRemoving = false;
+                const saveEdit = () => {
+                    if (isRemoving) return;
+                    isRemoving = true;
+                    this.textContent = textarea.value || currentValue;
+                    this.style.display = '';
+                    if (textarea.parentNode) textarea.remove();
+                };
+                
+                textarea.onblur = saveEdit;
+                textarea.onkeydown = (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        if (!isRemoving) {
+                            isRemoving = true;
+                            this.textContent = currentValue;
+                            this.style.display = '';
+                            if (textarea.parentNode) textarea.remove();
+                        }
+                    }
+                    // Enter to save, Shift+Enter to new line
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveEdit();
+                    }
+                };
+                
+                this.style.display = 'none';
+                this.parentNode.insertBefore(textarea, this.nextSibling);
+                textarea.focus();
+            };
+        }
 
         setText('.date-display', task.dueDate || task.deadline || '-');
         setText('.assignee-name', task.dri || task.assignee || '-');
@@ -2386,6 +2485,14 @@ async function showTaskDetailModal(projectId, taskId) {
                     }
                     initDeadlinePicker();
                     initTaskDetailDriSelect2();
+                    // Set DRI value after select2 init
+                    const driSelect = document.getElementById('dri');
+                    if (driSelect && task.dri) {
+                        driSelect.value = task.dri;
+                        if (window.jQuery && $(driSelect).data('select2')) {
+                            $(driSelect).val(task.dri).trigger('change');
+                        }
+                    }
                 }, 50);
             } else {
                 const modal = new bootstrap.Modal(modalRoot);
@@ -2394,6 +2501,14 @@ async function showTaskDetailModal(projectId, taskId) {
                 setTimeout(() => {
                     initDeadlinePicker();
                     initTaskDetailDriSelect2();
+                    // Set DRI value after select2 init
+                    const driSelect = document.getElementById('dri');
+                    if (driSelect && task.dri) {
+                        driSelect.value = task.dri;
+                        if (window.jQuery && $(driSelect).data('select2')) {
+                            $(driSelect).val(task.dri).trigger('change');
+                        }
+                    }
                 }, 50);
             }
         } catch (e) {
@@ -2404,6 +2519,14 @@ async function showTaskDetailModal(projectId, taskId) {
                 } catch (err) {}
                 try {
                     initTaskDetailDriSelect2();
+                    // Set DRI value after select2 init
+                    const driSelect = document.getElementById('dri');
+                    if (driSelect && task.dri) {
+                        driSelect.value = task.dri;
+                        if (window.jQuery && $(driSelect).data('select2')) {
+                            $(driSelect).val(task.dri).trigger('change');
+                        }
+                    }
                 } catch (err) {}
             }, 50);
         }
@@ -2528,6 +2651,12 @@ async function saveTaskDetailChanges() {
     const driInput = document.getElementById('dri');
     const deadlineInput = document.getElementById('deadLine');
 
+    // Get name and description from modal
+    const taskNameEl = modalRoot.querySelector('.task-detail-name');
+    const descEl = modalRoot.querySelector('.section-content');
+    const newName = taskNameEl ? taskNameEl.textContent.trim() : taskPayload.name;
+    const newDescription = descEl ? descEl.textContent.trim() : taskPayload.description;
+
     let newDri = driInput ? driInput.value : taskPayload.dri;
     let newDeadline = deadlineInput ? deadlineInput.value : taskPayload.dueDate;
     if (newDri === 'N/A' || newDri === '-' || !newDri || newDri.trim() === '') newDri = null;
@@ -2545,6 +2674,8 @@ async function saveTaskDetailChanges() {
     taskPayload.priority = newPriority === 'N/A' ? null : newPriority;
     taskPayload.dri = newDri;
     taskPayload.dueDate = newDeadline;
+    taskPayload.name = newName;
+    taskPayload.description = newDescription;
 
     try {
         const stageSelect = modalRoot.querySelector('#sl-xvt');
@@ -2699,10 +2830,15 @@ async function saveTaskDetailChanges() {
             console.warn('Failed to refresh modal after update', e);
         }
 
-        // Toggle workflow buttons after status update
         try {
             updateTaskDetailFooterButtons(modalRoot, updatedTask.status);
         } catch (e) {}
+
+        try {
+            await getComments(taskId);
+        } catch (e) {
+            console.warn('Failed to refresh comments after task update', e);
+        }
 
         showAlertSuccess('Success', 'Task updated successfully');
     } catch (e) {
@@ -2774,11 +2910,100 @@ function applyTaskToDetailModal(modalRoot, task) {
         if (el) el.textContent = value || '';
     };
 
-    setText('.task-detail-id', task.taskCode || String(task.id || ''));
-    setText('.task-detail-name', task.name || '');
+    // Make task name editable on click
+    const taskNameEl = modalRoot.querySelector('.task-detail-name');
+    if (taskNameEl) {
+        taskNameEl.textContent = task.name || '';
+        taskNameEl.style.cursor = 'pointer';
+        taskNameEl.title = 'Click to edit';
+        taskNameEl.onclick = function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const currentValue = this.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'task-name-edit-input';
+            input.style.cssText = 'width: 100%; font-size: inherit; font-weight: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 1px solid var(--border-color); outline: none; padding: 4px 8px; border-radius: 4px;';
+            
+            const saveEdit = () => {
+                this.textContent = input.value || currentValue;
+                this.style.display = '';
+                input.remove();
+            };
+            
+            input.onblur = saveEdit;
+            input.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.textContent = currentValue;
+                    this.style.display = '';
+                    input.remove();
+                }
+            };
+            
+            this.style.display = 'none';
+            this.parentNode.insertBefore(input, this.nextSibling);
+            input.focus();
+            input.select();
+        };
+    }
 
+    setText('.task-detail-id', task.taskCode || String(task.id || ''));
+
+    // Make description editable on click
     const descEl = modalRoot.querySelector('.section-content');
-    if (descEl) descEl.textContent = task.description || '';
+    if (descEl) {
+        descEl.textContent = task.description || '';
+        descEl.style.cursor = 'pointer';
+        descEl.title = 'Click to edit';
+        descEl.onclick = function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const currentValue = this.textContent;
+            const textarea = document.createElement('textarea');
+            textarea.value = currentValue;
+            textarea.className = 'task-desc-edit-input';
+            textarea.style.cssText = 'width: 100%; min-height: 100px; font-size: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 1px solid var(--border-color); outline: none; padding: 8px; border-radius: 4px; resize: vertical;';
+            
+            let isRemoving = false;
+            const saveEdit = () => {
+                if (isRemoving) return;
+                isRemoving = true;
+                this.textContent = textarea.value || currentValue;
+                this.style.display = '';
+                if (textarea.parentNode) textarea.remove();
+            };
+            
+            textarea.onblur = saveEdit;
+            textarea.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (!isRemoving) {
+                        isRemoving = true;
+                        this.textContent = currentValue;
+                        this.style.display = '';
+                        if (textarea.parentNode) textarea.remove();
+                    }
+                }
+                // Enter to save, Shift+Enter to new line
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                }
+            };
+            
+            this.style.display = 'none';
+            this.parentNode.insertBefore(textarea, this.nextSibling);
+            textarea.focus();
+        };
+    }
 
     setText('.date-display', task.dueDate || task.deadline || '-');
     setText('.assignee-name', getUserLabelById(task.dri) || task.dri || task.assignee || '-');
@@ -2825,6 +3050,10 @@ function applyTaskToDetailModal(modalRoot, task) {
 
     const driSelect = document.getElementById('dri');
     if (driSelect) {
+        // Init select2 if not already initialized
+        if (window.jQuery && typeof $.fn.select2 === 'function' && !$(driSelect).data('select2')) {
+            initTaskDetailDriSelect2();
+        }
         driSelect.value = task.dri || '';
         if (window.jQuery && $(driSelect).data('select2')) {
             $(driSelect).val(task.dri || '').trigger('change');
@@ -2842,6 +3071,60 @@ function applyTaskToDetailModal(modalRoot, task) {
         currentTaskDetailObj = JSON.parse(JSON.stringify(task));
     } catch (e) {
         currentTaskDetailObj = task;
+    }
+
+    // Disable editing for WAITING_FOR_APPROVAL and COMPLETED status
+    const normalizedStatus = normalizeStatus(task.status);
+    const isLocked = normalizedStatus === 'WAITING_FOR_APPROVAL' || normalizedStatus === 'COMPLETED';
+    
+    if (isLocked) {
+        // Disable all select inputs
+        if (statusSelect) statusSelect.disabled = true;
+        if (prioritySelect) prioritySelect.disabled = true;
+        if (driSelect) {
+            driSelect.disabled = true;
+            if (window.jQuery && $(driSelect).data('select2')) {
+                $(driSelect).prop('disabled', true).trigger('change');
+            }
+        }
+        if (deadlineInput) deadlineInput.disabled = true;
+        
+        const stageSelect = modalRoot.querySelector('#sl-xvt');
+        if (stageSelect) stageSelect.disabled = true;
+        
+        const typeSelect = modalRoot.querySelector('#sl-type');
+        if (typeSelect) typeSelect.disabled = true;
+        
+        // Disable upload button
+        const uploadBtn = document.getElementById('upload');
+        if (uploadBtn) uploadBtn.disabled = true;
+        
+        // Disable save button
+        const saveBtn = modalRoot.querySelector('.js-task-save');
+        if (saveBtn) saveBtn.disabled = true;
+    } else {
+        // Enable all controls
+        if (statusSelect) statusSelect.disabled = false;
+        if (prioritySelect) prioritySelect.disabled = false;
+        if (driSelect) {
+            driSelect.disabled = false;
+            if (window.jQuery && $(driSelect).data('select2')) {
+                $(driSelect).prop('disabled', false).trigger('change');
+            }
+        }
+        if (deadlineInput) deadlineInput.disabled = false;
+        
+        const stageSelect = modalRoot.querySelector('#sl-xvt');
+        if (stageSelect) stageSelect.disabled = false;
+        
+        const typeSelect = modalRoot.querySelector('#sl-type');
+        if (typeSelect) typeSelect.disabled = false;
+        
+        const uploadBtn = document.getElementById('upload');
+        if (uploadBtn) uploadBtn.disabled = false;
+        
+        const saveBtn = modalRoot.querySelector('.js-task-save');
+        if (saveBtn) saveBtn.disabled = false;
     }
 }
 
@@ -4095,6 +4378,7 @@ function closeCustomTask() {
 
 function showCopyTemplate() {
     var modal = document.getElementById('copyTemplateModal');
+    loadCopyTemplateSelects();
     try {
         openModalAbove(modal);
     } catch (e) {
@@ -4106,10 +4390,120 @@ function showCopyTemplate() {
     }
 }
 
+async function loadCopyTemplateSelects() {
+    try {
+        // Load customers
+        const customers = await fetchOptions('/api/customers');
+        
+        const sourceCustomerSelect = document.getElementById('source-customer');
+        const targetCustomerSelect = document.getElementById('target-customer');
+        
+        if (sourceCustomerSelect && targetCustomerSelect) {
+            const customerOptions = '<option value="">Please select</option>' + 
+                customers.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            sourceCustomerSelect.innerHTML = customerOptions;
+            targetCustomerSelect.innerHTML = customerOptions;
+        }
+        
+        // Load projects
+        const projects = await fetchOptions('/api/projects');
+        
+        const sourceProjectSelect = document.getElementById('source-project-number');
+        const targetProjectSelect = document.getElementById('target-project-number');
+        
+        if (sourceProjectSelect && targetProjectSelect) {
+            const projectOptions = '<option value="">Please select</option>' + 
+                projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+            sourceProjectSelect.innerHTML = projectOptions;
+            targetProjectSelect.innerHTML = projectOptions;
+        }
+        
+        // Load stages
+        const stages = await fetchOptions('/api/stages');
+        
+        const sourceStageSelect = document.getElementById('source-xvt-stage');
+        const targetStageSelect = document.getElementById('target-xvt-stage');
+        
+        if (sourceStageSelect && targetStageSelect) {
+            const stageOptions = '<option value="">Please select</option>' + 
+                stages.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            sourceStageSelect.innerHTML = stageOptions;
+            targetStageSelect.innerHTML = stageOptions;
+        }
+        
+        // Load processes
+        const processes = await fetchOptions('/api/processes');
+        
+        const sourceProcessSelect = document.getElementById('source-process');
+        const targetProcessSelect = document.getElementById('target-process');
+        
+        if (sourceProcessSelect && targetProcessSelect) {
+            const processOptions = '<option value="">Please select</option>' + 
+                processes.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+            sourceProcessSelect.innerHTML = processOptions;
+            targetProcessSelect.innerHTML = processOptions;
+        }
+        
+    } catch (error) {
+        console.error('Error loading copy template selects:', error);
+        showAlertError('Error', 'Failed to load data for copy template');
+    }
+}
+
 function closeCopyTemplate() {
     var modalEl = document.getElementById('copyTemplateModal');
     var bsModal = bootstrap.Modal.getInstance(modalEl);
     if (bsModal) bsModal.hide();
+}
+
+async function confirmCopyProject() {
+    const sourceProjectId = document.getElementById('source-project-number')?.value;
+    const sourceStageId = document.getElementById('source-xvt-stage')?.value;
+    const sourceProcessId = document.getElementById('source-process')?.value;
+    
+    const targetProjectId = document.getElementById('target-project-number')?.value;
+    const targetStageId = document.getElementById('target-xvt-stage')?.value;
+    const targetProcessId = document.getElementById('target-process')?.value;
+    
+    if (!sourceProjectId || !sourceStageId || !sourceProcessId || 
+        !targetProjectId || !targetStageId || !targetProcessId) {
+        showAlertWarning('Warning', 'Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const params = new URLSearchParams({
+            sourceId: sourceProjectId,
+            sourceProcessId: sourceStageId,  // XVT Stage
+            sourceStageId: sourceProcessId,  // Process
+            targetId: targetProjectId,
+            targetProcessId: targetStageId,  // XVT Stage
+            targetStageId: targetProcessId   // Process
+        });
+        
+        const response = await fetch(`/sample-system/api/projects/copy?${params.toString()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to copy project');
+        }
+        
+        const result = await response.json();
+        
+        showAlertSuccess('Success', 'Project copied successfully');
+        closeCopyTemplate();
+        
+        // Reload project list
+        await loadProjectList();
+        
+    } catch (error) {
+        console.error('Error copying project:', error);
+        showAlertError('Error', 'Failed to copy project: ' + error.message);
+    }
 }
 
 function showRACIMatrix(projectId) {
@@ -4130,6 +4524,100 @@ let currentRACIData = {};
 let currentRACIProjectId = null;
 const RACI_EMPTY_PLACEHOLDER = '<span class="raci-cell raci-empty"></span>';
 
+async function loadRACIMatrixData(projectId) {
+    const modal = document.getElementById('raciMatrixModal');
+    const thead = modal.querySelector('thead tr');
+    const tbody = document.getElementById('raciMatrixBody');
+
+    currentRACIProjectId = projectId;
+
+    // Get project name from projectList
+    const project = findProjectById(projectId);
+    const projectName = project ? project.name : '';
+
+    // Update modal title with project name
+    const modalTitle = modal.querySelector('#raciMatrixModalLabel span:last-child');
+    if (modalTitle) {
+        const originalText = modalTitle.textContent.split(' - ')[0]; // Get base title without project name
+        if (projectName) {
+            modalTitle.textContent = `${originalText} - ${projectName}`;
+        } else {
+            modalTitle.textContent = originalText;
+        }
+    }
+
+    const departments = SELECT_CACHE['/api/departments'] || [];
+    if (departments.length === 0) {
+        const deptRes = await fetch('/sample-system/api/departments');
+        if (deptRes.ok) {
+            const deptJson = await deptRes.json();
+            SELECT_CACHE['/api/departments'] = deptJson.data || [];
+            departments.push(...SELECT_CACHE['/api/departments']);
+        }
+    }
+
+    const tasksRes = await fetch(`/sample-system/api/project/${projectId}/tasks`);
+    if (!tasksRes.ok) {
+        throw new Error(`Failed to fetch tasks: ${tasksRes.status}`);
+    }
+    const tasksJson = await tasksRes.json();
+    const tasks = tasksJson.data || [];
+
+    const raciRes = await fetch(`/sample-system/api/project/${projectId}/task-raci`);
+    if (!raciRes.ok) {
+        throw new Error(`Failed to fetch RACI data: ${raciRes.status}`);
+    }
+    const raciJson = await raciRes.json();
+    const raciData = raciJson.data || [];
+
+    currentRACIData = {};
+    raciData.forEach((raci) => {
+        const key = `${raci.taskId}_${raci.departmentId}`;
+        currentRACIData[key] = {
+            id: raci.id,
+            raci: raci.raci || '',
+            taskId: raci.taskId,
+            departmentId: raci.departmentId,
+        };
+    });
+
+    thead.innerHTML = `
+        <th style="min-width: 150px">Task</th>
+        ${departments.map((dept) => `<th style="max-width: 80px">${dept.name || dept.id}</th>`).join('')}
+    `;
+
+    tbody.innerHTML = tasks
+        .map((task) => {
+            return `
+            <tr>
+                <td>${task.name || task.id}</td>
+                ${departments
+                    .map((dept) => {
+                        const key = `${task.id}_${dept.id}`;
+                        const raciObj = currentRACIData[key];
+                        const raciValue = raciObj ? raciObj.raci : '';
+
+                        return `<td class="raci-editable-cell" data-task-id="${task.id}" data-dept-id="${
+                            dept.id
+                        }" style="cursor: pointer; min-height: 40px; vertical-align: middle;">
+                            ${
+                                raciValue
+                                    ? `<span class="raci-cell raci-badge raci-${raciValue.toLowerCase()}">${raciValue}</span>`
+                                    : RACI_EMPTY_PLACEHOLDER
+                            }
+                        </td>`;
+                    })
+                    .join('')}
+            </tr>
+        `;
+        })
+        .join('');
+
+    tbody.querySelectorAll('.raci-editable-cell').forEach((cell) => {
+        cell.addEventListener('click', handleRACICellClick);
+    });
+}
+
 async function showRACIMatrixForProject(projectId) {
     if (!projectId || projectId === 'null' || projectId === 'undefined') {
         showAlertWarning('Warning', 'Invalid project ID');
@@ -4137,84 +4625,11 @@ async function showRACIMatrixForProject(projectId) {
     }
 
     const modal = document.getElementById('raciMatrixModal');
-    const thead = modal.querySelector('thead tr');
-    const tbody = document.getElementById('raciMatrixBody');
 
     try {
         loader.load();
 
-        currentRACIProjectId = projectId;
-
-        const departments = SELECT_CACHE['/api/departments'] || [];
-        if (departments.length === 0) {
-            const deptRes = await fetch('/sample-system/api/departments');
-            if (deptRes.ok) {
-                const deptJson = await deptRes.json();
-                SELECT_CACHE['/api/departments'] = deptJson.data || [];
-                departments.push(...SELECT_CACHE['/api/departments']);
-            }
-        }
-
-        const tasksRes = await fetch(`/sample-system/api/project/${projectId}/tasks`);
-        if (!tasksRes.ok) {
-            throw new Error(`Failed to fetch tasks: ${tasksRes.status}`);
-        }
-        const tasksJson = await tasksRes.json();
-        const tasks = tasksJson.data || [];
-
-        const raciRes = await fetch(`/sample-system/api/project/${projectId}/task-raci`);
-        if (!raciRes.ok) {
-            throw new Error(`Failed to fetch RACI data: ${raciRes.status}`);
-        }
-        const raciJson = await raciRes.json();
-        const raciData = raciJson.data || [];
-
-        currentRACIData = {};
-        raciData.forEach((raci) => {
-            const key = `${raci.taskId}_${raci.departmentId}`;
-            currentRACIData[key] = {
-                id: raci.id,
-                raci: raci.raci || '',
-                taskId: raci.taskId,
-                departmentId: raci.departmentId,
-            };
-        });
-
-        thead.innerHTML = `
-            <th style="min-width: 150px">Task</th>
-            ${departments.map((dept) => `<th style="max-width: 80px">${dept.name || dept.id}</th>`).join('')}
-        `;
-
-        tbody.innerHTML = tasks
-            .map((task) => {
-                return `
-                <tr>
-                    <td>${task.name || task.id}</td>
-                    ${departments
-                        .map((dept) => {
-                            const key = `${task.id}_${dept.id}`;
-                            const raciObj = currentRACIData[key];
-                            const raciValue = raciObj ? raciObj.raci : '';
-
-                            return `<td class="raci-editable-cell" data-task-id="${task.id}" data-dept-id="${
-                                dept.id
-                            }" style="cursor: pointer; min-height: 40px; vertical-align: middle;">
-                                ${
-                                    raciValue
-                                        ? `<span class="raci-cell raci-badge raci-${raciValue.toLowerCase()}">${raciValue}</span>`
-                                        : RACI_EMPTY_PLACEHOLDER
-                                }
-                            </td>`;
-                        })
-                        .join('')}
-                </tr>
-            `;
-            })
-            .join('');
-
-        tbody.querySelectorAll('.raci-editable-cell').forEach((cell) => {
-            cell.addEventListener('click', handleRACICellClick);
-        });
+        await loadRACIMatrixData(projectId);
 
         loader.unload();
 
@@ -4336,10 +4751,11 @@ function saveRACIMatrix() {
                 }
                 return response.json();
             })
-            .then((result) => {
-                loader.unload();
+            .then(async (result) => {
                 showAlertSuccess('Success', 'RACI Matrix saved successfully');
-                closeRACIMatrix();
+                // Reload RACI data without reopening modal
+                await loadRACIMatrixData(currentRACIProjectId);
+                loader.unload();
             })
             .catch((error) => {
                 loader.unload();
@@ -4860,6 +5276,25 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         } catch (e) {
             console.warn('Failed to attach ppapFilterProject enter listener', e);
+        }
+
+        try {
+            const modelFilterInput = document.getElementById('filter-model');
+            if (modelFilterInput) {
+                const handler = function (ev) {
+                    if (ev && ev.key === 'Enter') {
+                        ev.preventDefault();
+                        try {
+                            filterProjects();
+                        } catch (error) {
+                            console.warn('filter-model enter handler error', error);
+                        }
+                    }
+                };
+                modelFilterInput.addEventListener('keydown', handler);
+            }
+        } catch (e) {
+            console.warn('Failed to attach filter-model enter listener', e);
         }
     } catch (e) {
         console.warn('Failed to attach filter_button listener', e);
