@@ -14,8 +14,8 @@
                 <span><i class="bi bi-search"></i></span>
                 <span><spring:message code="reportFilter" /></span>
             </div>
-            <div class="filter-grid">
-                <div class="filter-item">
+            <div class="filter-grid row g-3">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="customer" /></label>
                     <select class="filter-select">
                         <option value=""><spring:message code="all" /></option>
@@ -23,7 +23,7 @@
                         <option value="Rhea">Rhea</option>
                     </select>
                 </div>
-                <div class="filter-item">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="projectNumber" /></label>
                     <select class="filter-select">
                         <option value=""><spring:message code="all" /></option>
@@ -31,7 +31,7 @@
                         <option value="FTV-002">FTV-002</option>
                     </select>
                 </div>
-                <div class="filter-item">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="department" /></label>
                     <select class="filter-select">
                         <option value=""><spring:message code="all" /></option>
@@ -39,7 +39,7 @@
                         <option value="RD">RD</option>
                     </select>
                 </div>
-                <div class="filter-item">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="process" /></label>
                     <select class="filter-select">
                         <option value=""><spring:message code="all" /></option>
@@ -56,16 +56,16 @@
                         <option value="OTH">OTH</option>
                     </select>
                 </div>
-                <div class="filter-item">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="dateFrom" /></label>
                     <input type="date" class="filter-input" />
                 </div>
-                <div class="filter-item">
+                <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                     <label class="filter-label"><spring:message code="dateTo" /></label>
                     <input type="date" class="filter-input" />
                 </div>
             </div>
-            <div class="action-buttons-row">
+            <div class="action-buttons-row d-flex flex-wrap gap-3">
                 <button class="action-btn">
                     <span><i class="bi bi-bar-chart-line"></i></span>
                     <span><spring:message code="exportExcel" /></span>
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Report Tabs -->
-        <div class="report-tabs">
+        <div class="report-tabs d-flex flex-wrap gap-2">
             <button class="report-tab active" onclick="switchReportTab('overview')"><span><spring:message code="projectProgressReport" /></span></button>
             <button class="report-tab" onclick="switchReportTab('tasks')"><span><spring:message code="overdueTaskReport" /></span></button>
             <button class="report-tab" onclick="switchReportTab('waiting')"><span><spring:message code="pendingTaskReport" /></span></button>
@@ -94,10 +94,13 @@
             <button class="report-tab" onclick="switchReportTab('ppap')"><span><spring:message code="ppapSummaryReport" /></span></button>
         </div>
 
-        <!-- Report Content -->
 
+        <!-- Report Content Container with Fixed Height -->
+        <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+        
         <!-- 專案進度報告 -->
-        <div id="reportOverview" class="report-content active">
+        <div id="reportOverview" class="report-content active" style="flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
@@ -158,10 +161,12 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- 逾期任務報告 -->
-        <div id="reportTasks" class="report-content">
+        <div id="reportTasks" class="report-content" style="flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
@@ -210,10 +215,12 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- 待辦任務報告 -->
-        <div id="reportWaiting" class="report-content">
+        <div id="reportWaiting" class="report-content" style="flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
@@ -262,9 +269,11 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
-        <div id="reportDri" class="report-content">
+        <div id="reportDri" class="report-content" style="flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
@@ -343,10 +352,12 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- PPAP彙整報告 -->
-        <div id="reportPpap" class="report-content">
+        <div id="reportPpap" class="report-content" style="flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="table-responsive">
             <table class="report-table">
                 <thead>
                     <tr>
@@ -488,7 +499,10 @@
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
-</div>
+        
+        </div><!-- End Report Content Container -->
+    </div>
 
 <script src="/sample-system/js/modules/report.js"></script>

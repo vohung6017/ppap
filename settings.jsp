@@ -15,8 +15,8 @@ prefix="spring" %>
             <span><spring:message code="systemSettingsTitle" /></span>
         </div>
 
-        <div class="settings-grid">
-            <div class="setting-item">
+        <div class="settings-grid row g-3">
+            <div class="setting-item col-12">
                 <div class="setting-info">
                     <div class="setting-title"><spring:message code="taskNotification" /></div>
                     <div class="setting-description"><spring:message code="taskNotificationDesc" /></div>
@@ -26,7 +26,7 @@ prefix="spring" %>
                 </div>
             </div>
 
-            <div class="setting-item">
+            <div class="setting-item col-12">
                 <div class="setting-info">
                     <div class="setting-title"><spring:message code="deadlineWarning" /></div>
                     <div class="setting-description"><spring:message code="deadlineWarningDesc" /></div>
@@ -36,7 +36,7 @@ prefix="spring" %>
                 </div>
             </div>
 
-            <div class="setting-item">
+            <div class="setting-item col-12">
                 <div class="setting-info">
                     <div class="setting-title"><spring:message code="dailySummary" /></div>
                     <div class="setting-description"><spring:message code="dailySummaryDesc" /></div>
@@ -46,7 +46,7 @@ prefix="spring" %>
                 </div>
             </div>
 
-            <div class="setting-item">
+            <div class="setting-item col-12">
                 <div class="setting-info">
                     <div class="setting-title"><spring:message code="escalationNotification" /></div>
                     <div class="setting-description"><spring:message code="escalationNotificationDesc" /></div>
@@ -73,8 +73,8 @@ prefix="spring" %>
             <span><i class="bi bi-search"></i></span>
             <span><spring:message code="advancedFilter" /></span>
         </div>
-        <div class="filter-grid">
-            <div class="filter-item">
+        <div class="filter-grid row g-3">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="projectNumber" /></label>
                 <select class="filter-select" id="permissionFilterProject">
                     <option value=""><spring:message code="all" /></option>
@@ -85,7 +85,7 @@ prefix="spring" %>
                     <option value="FTV-005">FTV-005</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="projectCustomer" /></label>
                 <select class="filter-select" id="permissionFilterCustomer">
                     <option value=""><spring:message code="all" /></option>
@@ -96,7 +96,7 @@ prefix="spring" %>
                     <option value="Dell">Dell</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="projectModel" /></label>
                 <select class="filter-select" id="permissionFilterModel">
                     <option value=""><spring:message code="all" /></option>
@@ -107,7 +107,7 @@ prefix="spring" %>
                     <option value="XPS Desktop">XPS Desktop</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="xvtStage" /></label>
                 <select class="filter-select" id="permissionFilterStage">
                     <option value=""><spring:message code="all" /></option>
@@ -118,7 +118,7 @@ prefix="spring" %>
                     <option value="MP">MP</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="taskStatus" /></label>
                 <select class="filter-select" id="permissionFilterStatus">
                     <option value=""><spring:message code="all" /></option>
@@ -127,7 +127,7 @@ prefix="spring" %>
                     <option value="completed"><spring:message code="completed" /></option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="priority" /></label>
                 <select class="filter-select" id="permissionFilterPriority">
                     <option value=""><spring:message code="all" /></option>
@@ -136,7 +136,7 @@ prefix="spring" %>
                     <option value="low"><spring:message code="low" /></option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="department" /></label>
                 <select class="filter-select" id="permissionFilterDepartment">
                     <option value=""><spring:message code="all" /></option>
@@ -150,7 +150,7 @@ prefix="spring" %>
                     <option value="IQC">IQC</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="process" /></label>
                 <select class="filter-select" id="permissionFilterProcess">
                     <option value=""><spring:message code="all" /></option>
@@ -167,7 +167,7 @@ prefix="spring" %>
                     <option value="OTH">OTH</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="dri" /></label>
                 <select class="filter-select" id="permissionFilterDRI">
                     <option value=""><spring:message code="all" /></option>
@@ -178,11 +178,11 @@ prefix="spring" %>
                     <option value="周工程師">周工程師</option>
                 </select>
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="deadline" /></label>
                 <input type="date" class="filter-input" id="permissionFilterDeadline" />
             </div>
-            <div class="filter-item">
+            <div class="filter-item col-12 col-sm-6 col-md-4 col-lg-3">
                 <label class="filter-label"><spring:message code="searchKeyword" /></label>
                 <input
                     type="text"
@@ -192,7 +192,7 @@ prefix="spring" %>
                     data-i18n-placeholder="enterKeyword" />
             </div>
         </div>
-        <div class="action-buttons-row" style="margin-top: 15px">
+        <div class="action-buttons-row d-flex flex-wrap gap-3" style="margin-top: 15px">
             <button class="secondary-btn" onclick="resetPermissionFilter()">
                 <span><i class="bi bi-arrow-repeat"></i></span>
                 <span>重置</span>
@@ -203,6 +203,7 @@ prefix="spring" %>
             </button>
         </div>
 
+        <div class="table-responsive">
         <table class="permission-table">
             <thead>
                 <tr>
@@ -299,6 +300,7 @@ prefix="spring" %>
                 </tr>
             </tbody>
         </table>
+        </div>
 
         <div
             id="permissionTaskDetailModal"
@@ -493,7 +495,7 @@ prefix="spring" %>
                     </div>
                 </div>
 
-                <div class="action-buttons-row" style="margin-top: 20px">
+                <div class="action-buttons-row d-flex flex-wrap gap-3" style="margin-top: 20px">
                     <button class="primary-btn">
                         <span><i class="bi bi-plus-circle"></i></span>
                         <span>新增使用者</span>
