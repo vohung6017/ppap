@@ -53,6 +53,20 @@ function getStageIdByName(stageName) {
     return found ? found.id : null;
 }
 
+function getStageNameById(stageId) {
+    if (!stageId) return null;
+    const stages = SELECT_CACHE['/api/stages'] || [];
+    const found = stages.find((s) => s.id === stageId || String(s.id) === String(stageId));
+    return found ? found.name : null;
+}
+
+function getProjectNameById(projectId) {
+    if (!projectId) return null;
+    const projects = SELECT_CACHE['/api/projects'] || [];
+    const found = projects.find((p) => p.id === projectId || String(p.id) === String(projectId));
+    return found ? found.name : null;
+}
+
 function getStatusBadgeClass(status) {
     const statusMap = {
         OPEN: 'status-pending',
@@ -159,6 +173,10 @@ async function renderProjects(searchParams) {
         }
 
         projectsData.forEach((project) => {
+            const xvtCompletionNumber = Number(project.xvtCompletion);
+            const xvtCompletionDisplay = Number.isFinite(xvtCompletionNumber)
+                ? `${xvtCompletionNumber}%`
+                : '-';
             const card = document.createElement('div');
             card.className = 'project-card';
             card.innerHTML = `
@@ -170,29 +188,33 @@ async function renderProjects(searchParams) {
             </div>
             <div class="project-meta">
                 <div class="meta-item">
-                    <div class="meta-label">客戶</div>
+                    <div class="meta-label">${t('project.customer')}</div>
                     <div class="meta-value">${project.customerName || '-'}</div>
                 </div>
                 <div class="meta-item">
-                    <div class="meta-label">產品</div>
+                    <div class="meta-label">${t('project.product')}</div>
                     <div class="meta-value">${project.modelName}</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">${t('project.xvt')}</div>
+                    <div class="meta-value" style="color: var(--accent-cyan);">${xvtCompletionDisplay}</div>
                 </div>
                 <div class="meta-item clickable" data-id="${
                     project.id
                 }" data-filter="in-progress" data-action="showTaskListByFilter">
-                    <div class="meta-label">進行中任務</div>
+                    <div class="meta-label">${t('project.inprogress')}</div>
                     <div class="meta-value" style="color: var(--accent-orange);">${project.inProcess}</div>
                 </div>
                 <div class="meta-item clickable" data-id="${
                     project.id
                 }" data-filter="pending" data-action="showTaskListByFilter">
-                    <div class="meta-label">本週待辦</div>
+                    <div class="meta-label">${t('project.pending')}</div>
                     <div class="meta-value" style="color: var(--accent-blue);">${project.weeklyPending}</div>
                 </div>
                 <div class="meta-item clickable" data-id="${
                     project.id
                 }" data-filter="overdue" data-action="showTaskListByFilter">
-                    <div class="meta-label">逾期任務</div>
+                    <div class="meta-label">${t('project.overdue')}</div>
                     <div class="meta-value" style="color: var(--accent-red);">${project.overDueTask}</div>
                 </div>
             </div>
@@ -511,14 +533,15 @@ async function saveCftMember(row, projectId) {
 
 async function showTaskByStage(projectId, stage) {
     const modal = document.getElementById('taskListModal');
-    const title = document.getElementById('taskListModalTitle');
+    const title = document.getElementById('taskListModalLabel');
     const tbody = document.getElementById('taskListModalBody');
 
     try {
         loader.load();
 
         if (title) {
-            title.textContent = `${projectId} - ${stage} Stage Tasks`;
+            // title.textContent = `${projectId} - ${stage} Stage Tasks`;
+            title.textContent = `Tasks List`
         }
 
         const stageId = getStageIdByName(stage);
@@ -529,32 +552,33 @@ async function showTaskByStage(projectId, stage) {
             if (tasks.length === 0) {
                 tbody.innerHTML = `
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                    <td colspan="8" style="text-align: center; padding: 20px; color: var(--text-secondary);">
                         No tasks found for this stage
                     </td>
                 </tr>
             `;
             } else {
                 tbody.innerHTML = tasks
-                    .map((task) => {
+                    .map((task, index) => {
                         const statusClass = getStatusBadgeClass(task.status);
                         const statusLabel = getStatusLabel(task.status);
                         const priorityClass = getPriorityBadgeClass(task.priority);
                         const priorityLabel = getPriorityLabel(task.priority);
                         const driDisplay = getUserLabelById(task.dri) || '-';
                         const dueDate = task.dueDate || '-';
+                        const stageName = task.stageName || getStageNameById(task.stageId) || stage;
 
                         return `
                     <tr data-id="${task.id}" data-project-id="${projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                        <td>${index + 1}</td>
                         <td class="task-id-cell">${task.taskCode || task.id}</td>
                         <td>${task.name || '-'}</td>
-                        <td>${projectId}</td>
-                        <td>${stage}</td>
+                        <td>${stageName}</td>
                         <td><span class="task-status-badge ${statusClass}">${statusLabel}</span></td>
                         <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                         <td>${driDisplay}</td>
                         <td>${dueDate}</td>
-                        <td class="action-icons" onclick="event.stopPropagation();">
+                        <td class="action-icons">
                             <button class="action-icon-btn" data-id="${
                                 task.id
                             }" data-project-id="${projectId}" data-action="editTaskDetail"><i class="bi bi-pencil"></i></button>
@@ -606,7 +630,8 @@ async function showTaskByFilter(filterType, projectId = null) {
     }
 
     if (title) {
-        title.textContent = titleText;
+        // title.textContent = titleText;
+        title.textContent = `Tasks List`;
     }
 
     if (tbody) {
@@ -622,11 +647,15 @@ async function showTaskByFilter(filterType, projectId = null) {
         let tasks = [];
         if (projectId) {
             // Fetch tasks for specific project with status filter
-            let url = `/sample-system/api/project/${projectId}/tasks`;
+            const params = new URLSearchParams();
             if (status) {
-                url += `?status=${encodeURIComponent(status)}`;
+                params.append('status', status);
             }
-            const res = await fetch(url);
+            params.append('id', projectId);
+            const encodedProjectId = encodeURIComponent(projectId);
+            const baseUrl = `/sample-system/api/project/${encodedProjectId}/tasks`;
+            const query = params.toString();
+            const res = await fetch(query ? `${baseUrl}?${query}` : baseUrl);
             if (res.ok) {
                 const json = await res.json();
                 tasks = json.data || [];
@@ -634,30 +663,30 @@ async function showTaskByFilter(filterType, projectId = null) {
         }
 
         if (!tasks || tasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
             return;
         }
 
-        tbody.innerHTML = tasks.map((task) => {
+        tbody.innerHTML = tasks.map((task, index) => {
             const statusClass = getStatusBadgeClass(task.status);
             const statusLabel = getStatusLabel(task.status);
             const priorityClass = getPriorityBadgeClass(task.priority);
             const priorityLabel = getPriorityLabel(task.priority);
             const driDisplay = getUserLabelById(task.dri) || '-';
             const dueDate = task.dueDate || '-';
-            const stageName = task.stageName || task.stageId || '-';
+            const stageName = task.stageName || getStageNameById(task.stageId) || task.stageId || '-';
 
             return `
-                <tr data-id="${task.id}" data-project-id="${projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                <tr data-id="${task.id}" data-project-id="${projectId || task.projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                    <td>${index + 1}</td>
                     <td class="task-id-cell">${task.taskCode || task.id}</td>
                     <td>${task.name || '-'}</td>
-                    <td>${projectId || '-'}</td>
                     <td>${stageName}</td>
                     <td><span class="task-status-badge ${statusClass}">${statusLabel}</span></td>
                     <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                     <td>${driDisplay}</td>
                     <td>${dueDate}</td>
-                    <td class="action-icons" onclick="event.stopPropagation();">
+                    <td class="action-icons">
                         <button class="action-icon-btn" data-id="${task.id}" data-project-id="${projectId}" data-action="editTaskDetail"><i class="bi bi-pencil"></i></button>
                         <button class="action-icon-btn" data-id="${task.id}" data-action="deleteTask"><i class="bi bi-trash"></i></button>
                     </td>
@@ -697,7 +726,8 @@ async function showDashboardTasks(filterType) {
     }
 
     if (title) {
-        title.textContent = titleText;
+        // title.textContent = titleText;
+        title.textContent = `Tasks List`;
     }
 
     if (tbody) {
@@ -714,15 +744,16 @@ async function showDashboardTasks(filterType) {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         
-        function formatDate(d) {
+        function formatDate(d, isEndDate = false) {
             const y = d.getFullYear();
             const m = ('0' + (d.getMonth() + 1)).slice(-2);
             const day = ('0' + d.getDate()).slice(-2);
-            return `${y}/${m}/${day} 00:00:00`;
+            const time = isEndDate ? '23:59:59' : '00:00:00';
+            return `${y}/${m}/${day} ${time}`;
         }
 
         const startTime = formatDate(startOfMonth);
-        const endTime = formatDate(now);
+        const endTime = formatDate(now, true);
 
         // Build API URL
         let url = `/sample-system/api/dashboard/tasks?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
@@ -738,31 +769,31 @@ async function showDashboardTasks(filterType) {
         }
 
         if (!tasks || tasks.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-secondary);padding:2rem">No tasks found</td></tr>';
             return;
         }
 
-        tbody.innerHTML = tasks.map((task) => {
+        tbody.innerHTML = tasks.map((task, index) => {
             const statusClass = getStatusBadgeClass(task.status);
             const statusLabel = getStatusLabel(task.status);
             const priorityClass = getPriorityBadgeClass(task.priority);
             const priorityLabel = getPriorityLabel(task.priority);
             const driDisplay = getUserLabelById(task.dri) || '-';
             const dueDate = task.dueDate || '-';
-            const stageName = task.stageName || task.stageId || '-';
+            const stageName = task.stageName || getStageNameById(task.stageId) || task.stageId || '-';
             const projectId = task.projectId || '-';
 
             return `
                 <tr data-id="${task.id}" data-project-id="${projectId}" data-action="showTaskDetail" style="cursor: pointer;">
+                    <td>${index + 1}</td>
                     <td class="task-id-cell">${task.taskCode || task.id}</td>
                     <td>${task.name || '-'}</td>
-                    <td>${projectId}</td>
                     <td>${stageName}</td>
                     <td><span class="task-status-badge ${statusClass}">${statusLabel}</span></td>
                     <td><span class="priority-badge ${priorityClass}">${priorityLabel}</span></td>
                     <td>${driDisplay}</td>
                     <td>${dueDate}</td>
-                    <td class="action-icons" onclick="event.stopPropagation();">
+                    <td class="action-icons">
                         <button class="action-icon-btn" data-id="${task.id}" data-project-id="${projectId}" data-action="editTaskDetail"><i class="bi bi-pencil"></i></button>
                         <button class="action-icon-btn" data-id="${task.id}" data-action="deleteTask"><i class="bi bi-trash"></i></button>
                     </td>
@@ -1052,20 +1083,23 @@ function initModalRobustness() {
 
     document.addEventListener('shown.bs.modal', function (ev) {
         try {
+            var modalEl = ev.target;
+            var allModals = document.querySelectorAll('.modal.show');
             var backdrops = document.querySelectorAll('.modal-backdrop');
-            if (backdrops && backdrops.length > 1) {
-                backdrops.forEach(function (b, idx) {
-                    if (idx < backdrops.length - 1) b.remove();
+            
+            // Ensure each modal and backdrop has proper z-index for stacking
+            if (allModals.length > 0) {
+                allModals.forEach(function (modal, idx) {
+                    var baseZIndex = 1050 + (idx * 20);
+                    modal.style.zIndex = (baseZIndex + 10).toString();
                 });
             }
-
-            var modalEl = ev.target;
-            var backdrop = document.querySelector('.modal-backdrop.show');
-            if (backdrop && modalEl) {
-                var mz = parseInt(window.getComputedStyle(modalEl).zIndex || '1060', 10);
-                if (isNaN(mz)) mz = 1060;
-                backdrop.style.zIndex = (mz - 5).toString();
-                modalEl.style.zIndex = mz.toString();
+            
+            if (backdrops.length > 0) {
+                backdrops.forEach(function (backdrop, idx) {
+                    var baseZIndex = 1050 + (idx * 20);
+                    backdrop.style.zIndex = baseZIndex.toString();
+                });
             }
         } catch (e) {
             console.error('shown.bs.modal handler error:', e);
@@ -1228,15 +1262,48 @@ async function loadSummary() {
             const y = d.getFullYear();
             const m = ('0' + (d.getMonth() + 1)).slice(-2);
             const day = ('0' + d.getDate()).slice(-2);
-            return `${y}/${m}/${day} 00:00:00`;
+            const h = ('0' + d.getHours()).slice(-2);
+            const min = ('0' + d.getMinutes()).slice(-2);
+            const sec = ('0' + d.getSeconds()).slice(-2);
+            return `${y}/${m}/${day} ${h}:${min}:${sec}`;
+        }
+
+        function getMonday(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            const monday = new Date(date.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            return monday;
+        }
+
+        function getSunday(d) {
+            const monday = getMonday(d);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+            return sunday;
         }
 
         const now = new Date();
+        
+        // For Total Projects - this month vs last month
         const startThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endThisMonth = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        endThisMonth.setHours(23, 59, 59, 999);
 
         const startPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const endPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        endPrevMonth.setHours(23, 59, 59, 999);
+
+        // For In Progress - this week vs last week
+        const startThisWeek = getMonday(now);
+        const endThisWeek = getSunday(now);
+        
+        const lastWeekDate = new Date(now);
+        lastWeekDate.setDate(now.getDate() - 7);
+        const startLastWeek = getMonday(lastWeekDate);
+        const endLastWeek = getSunday(lastWeekDate);
 
         const q1 = `?startTime=${encodeURIComponent(fmtDate(startThisMonth))}&endTime=${encodeURIComponent(
             fmtDate(endThisMonth)
@@ -1244,12 +1311,27 @@ async function loadSummary() {
         const q2 = `?startTime=${encodeURIComponent(fmtDate(startPrevMonth))}&endTime=${encodeURIComponent(
             fmtDate(endPrevMonth)
         )}`;
+        
+        // Separate query for in-progress tasks (this week vs last week)
+        const q3 = `?startTime=${encodeURIComponent(fmtDate(startThisWeek))}&endTime=${encodeURIComponent(
+            fmtDate(endThisWeek)
+        )}`;
+        const q4 = `?startTime=${encodeURIComponent(fmtDate(startLastWeek))}&endTime=${encodeURIComponent(
+            fmtDate(endLastWeek)
+        )}`;
 
-        const [r1, r2] = await Promise.all([fetch(endpoint + q1), fetch(endpoint + q2)]);
-        if (!r1.ok || !r2.ok) throw new Error('Error fetching summary');
+        const [r1, r2, r3, r4] = await Promise.all([
+            fetch(endpoint + q1), 
+            fetch(endpoint + q2),
+            fetch(endpoint + q3),
+            fetch(endpoint + q4)
+        ]);
+        if (!r1.ok || !r2.ok || !r3.ok || !r4.ok) throw new Error('Error fetching summary');
 
         const j1 = await r1.json();
         const j2 = await r2.json();
+        const j3 = await r3.json();
+        const j4 = await r4.json();
 
         function metricsFromResponse(res) {
             if (!res) return {totalProject: 0, processTask: 0, overDueTask: 0, weekly: 0};
@@ -1278,6 +1360,8 @@ async function loadSummary() {
 
         const cur = metricsFromResponse(j1);
         const prev = metricsFromResponse(j2);
+        const curWeek = metricsFromResponse(j3);
+        const prevWeek = metricsFromResponse(j4);
 
         const elTotal = document.getElementById('total');
         const elInProgress = document.getElementById('in_progress');
@@ -1285,13 +1369,13 @@ async function loadSummary() {
         const elPending = document.getElementById('pending');
 
         if (elTotal) elTotal.textContent = cur.totalProject;
-        if (elInProgress) elInProgress.textContent = cur.processTask;
+        if (elInProgress) elInProgress.textContent = curWeek.processTask; // Use current week data
         if (elOverdue) elOverdue.textContent = cur.overDueTask;
         if (elPending) elPending.textContent = cur.weekly;
 
         const diffs = {
             total: cur.totalProject - prev.totalProject,
-            in_progress: cur.processTask - prev.processTask,
+            in_progress: curWeek.processTask - prevWeek.processTask, // Compare this week vs last week
             overdue: cur.overDueTask - prev.overDueTask,
             pending: cur.weekly - prev.weekly,
         };
@@ -1604,6 +1688,409 @@ function escapeHtml(input) {
 
 let currentTaskDetailObj = null;
 
+function getTaskDetailStatusValue(modalRoot) {
+    if (!modalRoot) return null;
+    const sel = modalRoot.querySelector('#modal-sl-status') || modalRoot.querySelector('#sl-status');
+    return sel ? sel.value : null;
+}
+
+function isInProgressStatus(statusVal) {
+    if (statusVal === null || statusVal === undefined) return false;
+    const s = String(statusVal).trim().toLowerCase();
+    if (!s) return false;
+    return s === 'in_progress' || s === 'in-progress' || s.includes('progress');
+}
+
+function isWaitingForApprovalStatus(statusVal) {
+    if (statusVal === null || statusVal === undefined) return false;
+    const s = String(statusVal).trim().toLowerCase();
+    if (!s) return false;
+    if (s === 'waiting_for_approval' || s === 'waiting-for-approval') return true;
+    if (s === 'waiting') return true;
+    // covers "waiting for approval" label coming from DB
+    return s.includes('waiting') && s.includes('approval');
+}
+
+function updateTaskDetailFooterButtons(modalRoot, statusVal) {
+    if (!modalRoot) return;
+
+    const btnSubmit = modalRoot.querySelector('.js-task-submit');
+    const btnReject = modalRoot.querySelector('.js-task-reject');
+    const btnApprove = modalRoot.querySelector('.js-task-approve');
+    const btnSave = modalRoot.querySelector('.js-task-save');
+
+    const waiting = isWaitingForApprovalStatus(statusVal);
+    const inProgress = isInProgressStatus(statusVal);
+
+    // default: close + save only
+    if (btnSubmit) btnSubmit.classList.toggle('d-none', !inProgress);
+    if (btnSave) btnSave.classList.toggle('d-none', waiting);
+    if (btnReject) btnReject.classList.toggle('d-none', !waiting);
+    if (btnApprove) btnApprove.classList.toggle('d-none', !waiting);
+}
+
+async function fetchTaskById(taskId) {
+    const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}`);
+    if (!res.ok) throw new Error(`Failed to fetch task: ${res.status}`);
+    const json = await res.json();
+    return json.data || json.result || null;
+}
+
+function applyTaskToDetailModal(modalRoot, task) {
+    if (!modalRoot || !task) return;
+
+    try {
+        modalRoot.dataset.taskId = String(task.id || modalRoot.dataset.taskId || '');
+        if (task.projectId !== undefined && task.projectId !== null) {
+            modalRoot.dataset.projectId = String(task.projectId);
+        }
+    } catch (e) {}
+
+    const setText = (selector, value) => {
+        const el = modalRoot.querySelector(selector);
+        if (el) el.textContent = value || '';
+    };
+
+    // Make task name editable on click
+    const taskNameEl = modalRoot.querySelector('.task-detail-name');
+    if (taskNameEl) {
+        taskNameEl.textContent = task.name || '';
+        taskNameEl.style.cursor = 'pointer';
+        taskNameEl.title = 'Click to edit';
+        taskNameEl.onclick = function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const currentValue = this.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'task-name-edit-input';
+            input.style.cssText = 'width: 100%; font-size: inherit; font-weight: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 0.0625rem solid var(--border-color); outline: none; padding: 4px 8px; border-radius: 4px;';
+            
+            const saveEdit = () => {
+                this.textContent = input.value || currentValue;
+                this.style.display = '';
+                input.remove();
+            };
+            
+            input.onblur = saveEdit;
+            input.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveEdit();
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    this.textContent = currentValue;
+                    this.style.display = '';
+                    input.remove();
+                }
+            };
+            
+            this.style.display = 'none';
+            this.parentNode.insertBefore(input, this.nextSibling);
+            input.focus();
+            input.select();
+        };
+    }
+
+    setText('.task-detail-id', task.taskCode || String(task.id || ''));
+
+    // Make description editable on click
+    const descEl = modalRoot.querySelector('.section-content');
+    if (descEl) {
+        descEl.textContent = task.description || '';
+        descEl.style.cursor = 'pointer';
+        descEl.title = 'Click to edit';
+        descEl.onclick = function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const currentValue = this.textContent;
+            const textarea = document.createElement('textarea');
+            textarea.value = currentValue;
+            textarea.className = 'task-desc-edit-input';
+            textarea.style.cssText = 'width: 100%; min-height: 100px; font-size: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 0.0625rem solid var(--border-color); outline: none; padding: 8px; border-radius: 4px; resize: vertical;';
+            
+            let isRemoving = false;
+            const saveEdit = () => {
+                if (isRemoving) return;
+                isRemoving = true;
+                this.textContent = textarea.value || currentValue;
+                this.style.display = '';
+                if (textarea.parentNode) textarea.remove();
+            };
+            
+            textarea.onblur = saveEdit;
+            textarea.onkeydown = (e) => {
+                e.stopPropagation();
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (!isRemoving) {
+                        isRemoving = true;
+                        this.textContent = currentValue;
+                        this.style.display = '';
+                        if (textarea.parentNode) textarea.remove();
+                    }
+                }
+                // Enter to save, Shift+Enter to new line
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveEdit();
+                }
+            };
+            
+            this.style.display = 'none';
+            this.parentNode.insertBefore(textarea, this.nextSibling);
+            textarea.focus();
+        };
+    }
+
+    setText('.date-display', task.dueDate || task.deadline || '-');
+    setText('.assignee-name', getUserLabelById(task.dri) || task.dri || task.assignee || '-');
+
+    const statusBadge = modalRoot.querySelector('.task-status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = getStatusLabel(task.status);
+        statusBadge.className = `task-status-badge ${getStatusBadgeClass(task.status)}`;
+    }
+
+    const priorityBadge = modalRoot.querySelector('.priority-badge');
+    if (priorityBadge) {
+        priorityBadge.textContent = getPriorityLabel(task.priority);
+        priorityBadge.className = `priority-badge ${getPriorityBadgeClass(task.priority)}`;
+    }
+
+    const statusSelect = modalRoot.querySelector('#modal-sl-status') || modalRoot.querySelector('#sl-status');
+    if (statusSelect) {
+        const val = task.status === null || task.status === undefined || String(task.status).trim() === '' ? 'N/A' : String(task.status);
+        const hasOption = Array.from(statusSelect.options).some((o) => String(o.value) === val);
+        if (!hasOption) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = val;
+            if (statusSelect.options.length > 0) statusSelect.add(opt, statusSelect.options[0]);
+            else statusSelect.add(opt);
+        }
+        statusSelect.value = val;
+    }
+
+    const prioritySelect = modalRoot.querySelector('#modal-sl-priority') || modalRoot.querySelector('#sl-priority');
+    if (prioritySelect) {
+        const val = task.priority === null || task.priority === undefined || String(task.priority).trim() === '' ? 'N/A' : String(task.priority);
+        const hasOption = Array.from(prioritySelect.options).some((o) => String(o.value) === val);
+        if (!hasOption) {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.text = val;
+            if (prioritySelect.options.length > 0) prioritySelect.add(opt, prioritySelect.options[0]);
+            else prioritySelect.add(opt);
+        }
+        prioritySelect.value = val;
+    }
+
+    const driSelect = document.getElementById('dri');
+    if (driSelect) {
+        // Init select2 if not already initialized
+        if (window.jQuery && typeof $.fn.select2 === 'function' && !$(driSelect).data('select2')) {
+            initTaskDetailDriSelect2();
+        }
+        driSelect.value = task.dri || '';
+        if (window.jQuery && $(driSelect).data('select2')) {
+            $(driSelect).val(task.dri || '').trigger('change');
+        }
+    }
+
+    const deadlineInput = document.getElementById('deadLine');
+    if (deadlineInput) {
+        const normalized = task.dueDate ? DateFormatter.toDisplayFormat(task.dueDate) : task.deadline ? DateFormatter.toDisplayFormat(task.deadline) : '';
+        deadlineInput.value = normalized;
+        deadlineInput.dataset.initialValue = normalized;
+    }
+
+    try {
+        currentTaskDetailObj = JSON.parse(JSON.stringify(task));
+    } catch (e) {
+        currentTaskDetailObj = task;
+    }
+
+    // Disable editing for WAITING_FOR_APPROVAL and COMPLETED status
+    const normalizedStatus = String(task.status || '').trim().toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
+    const isLocked = normalizedStatus === 'WAITING_FOR_APPROVAL' || normalizedStatus === 'COMPLETED';
+    
+    if (isLocked) {
+        // Disable all select inputs
+        if (statusSelect) statusSelect.disabled = true;
+        if (prioritySelect) prioritySelect.disabled = true;
+        if (driSelect) {
+            driSelect.disabled = true;
+            if (window.jQuery && $(driSelect).data('select2')) {
+                $(driSelect).prop('disabled', true).trigger('change');
+            }
+        }
+        if (deadlineInput) deadlineInput.disabled = true;
+        
+        const stageSelect = modalRoot.querySelector('#sl-xvt');
+        if (stageSelect) stageSelect.disabled = true;
+        
+        const typeSelect = modalRoot.querySelector('#sl-type');
+        if (typeSelect) typeSelect.disabled = true;
+        
+        // Disable upload button
+        const uploadBtn = document.getElementById('upload');
+        if (uploadBtn) uploadBtn.disabled = true;
+        
+        // Disable save button
+        const saveBtn = modalRoot.querySelector('.js-task-save');
+        if (saveBtn) saveBtn.disabled = true;
+    } else {
+        // Enable all controls
+        if (statusSelect) statusSelect.disabled = false;
+        if (prioritySelect) prioritySelect.disabled = false;
+        if (driSelect) {
+            driSelect.disabled = false;
+            if (window.jQuery && $(driSelect).data('select2')) {
+                $(driSelect).prop('disabled', false).trigger('change');
+            }
+        }
+        if (deadlineInput) deadlineInput.disabled = false;
+        
+        const stageSelect = modalRoot.querySelector('#sl-xvt');
+        if (stageSelect) stageSelect.disabled = false;
+        
+        const typeSelect = modalRoot.querySelector('#sl-type');
+        if (typeSelect) typeSelect.disabled = false;
+        
+        const uploadBtn = document.getElementById('upload');
+        if (uploadBtn) uploadBtn.disabled = false;
+        
+        const saveBtn = modalRoot.querySelector('.js-task-save');
+        if (saveBtn) saveBtn.disabled = false;
+    }
+}
+
+function wireTaskDetailWorkflowActions(modalRoot) {
+    if (!modalRoot) return;
+    if (modalRoot.dataset.workflowWired === '1') return;
+    modalRoot.dataset.workflowWired = '1';
+
+    const statusSelect = modalRoot.querySelector('#modal-sl-status') || modalRoot.querySelector('#sl-status');
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function () {
+            updateTaskDetailFooterButtons(modalRoot, this.value);
+        });
+    }
+
+    const withDisabled = async (btn, fn) => {
+        if (!btn) return fn();
+        const prev = btn.disabled;
+        btn.disabled = true;
+        try {
+            return await fn();
+        } finally {
+            btn.disabled = prev;
+        }
+    };
+
+    const postAction = async (action) => {
+        const taskId = modalRoot.dataset.taskId;
+        if (!taskId) {
+            showAlertError('Error', 'Task ID is required');
+            return;
+        }
+
+        try {
+            if (typeof loader !== 'undefined' && loader && typeof loader.load === 'function') loader.load();
+            const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}/${action}`, {
+                method: 'POST',
+            });
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                console.warn(`Task ${action} failed`, res.status, res.statusText, text);
+                showAlertError('Failed', `Failed to ${action} task. Server returned ${res.status}`);
+                return;
+            }
+
+            const updated = await fetchTaskById(taskId);
+            if (updated) {
+                applyTaskToDetailModal(modalRoot, updated);
+                updateTaskDetailFooterButtons(modalRoot, updated.status);
+                refreshTaskListRowData(updated);
+                try {
+                    await getComments(taskId);
+                } catch (e) {}
+            }
+            showAlertSuccess('Success', `Task ${action} successfully`);
+        } catch (e) {
+            console.error(`Task ${action} error`, e);
+            showAlertError('Failed', `Failed to ${action} task`);
+        } finally {
+            if (typeof loader !== 'undefined' && loader && typeof loader.unload === 'function') loader.unload();
+        }
+    };
+
+    const btnSubmit = modalRoot.querySelector('.js-task-submit');
+    const btnReject = modalRoot.querySelector('.js-task-reject');
+    const btnApprove = modalRoot.querySelector('.js-task-approve');
+
+    if (btnSubmit) {
+        btnSubmit.addEventListener('click', function () {
+            return withDisabled(btnSubmit, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Submit task',
+                        text: 'Are you sure you want to submit this task?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Submit',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('submit');
+            });
+        });
+    }
+
+    if (btnReject) {
+        btnReject.addEventListener('click', function () {
+            return withDisabled(btnReject, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Reject task',
+                        text: 'Are you sure you want to reject this task?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Reject',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('reject');
+            });
+        });
+    }
+
+    if (btnApprove) {
+        btnApprove.addEventListener('click', function () {
+            return withDisabled(btnApprove, async () => {
+                if (window.Swal) {
+                    const result = await Swal.fire({
+                        title: 'Approve task',
+                        text: 'Are you sure you want to approve this task?',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Approve',
+                        cancelButtonText: 'Cancel',
+                    });
+                    if (!result.isConfirmed) return;
+                }
+                await postAction('approve');
+            });
+        });
+    }
+}
+
 async function fetchAndRenderAttachments(taskId) {
     if (!taskId) return;
     try {
@@ -1710,33 +2197,48 @@ async function getComments(id) {
                 const author = it.createdBy || it.author || '-';
                 const date = it.createdAt || it.createAt || it.date || '-';
                 const content = it.content || it.cnContent || it.vnContent || '';
+                const type = it.type || 'COMMENT';
 
-                const isSystemUpdate = content.startsWith('Task updated:');
+                const safeAuthor = String(author);
+                const safeDate = String(date);
+                const safeContent = String(content);
 
-                if (isSystemUpdate) {
-                    const changes = parseTaskUpdates(content);
+                // Render LOG type
+                if (type === 'LOG') {
                     return `
-                        <div class="update-log-item ml-1" style="font-size:0.85rem; font-style: italic; opacity: 0.65;">
-                            <span class="update-label">Updated:</span>
-                            <span class="update-changes">${escapeHtml(changes)}</span>
-                            <span class="update-separator">-</span>
-                            <span class="update-author">${escapeHtml(String(author))}</span>
-                            <span class="update-separator">-</span>
-                            <span class="update-date">${escapeHtml(String(date))}</span>
-                        </div>`;
-                }
-
-                return `
-                    <div class="comment-item">
-                        <div class="comment-header">
-                            <div class="comment-avatar"><i class="bi bi-person"></i></div>
-                            <div>
-                                <div class="comment-author">${escapeHtml(String(author))}</div>
-                                <div class="comment-date">${escapeHtml(String(date))}</div>
+                        <div class="log-item m-0" style="display: flex; gap: 12px; margin-bottom:0.5rem; margin-left: 1rem;">
+                            <div class="log-avatar" style="flex-shrink: 0;">
+                                <div class="comment-avatar"><i class="bi bi-person"></i></div>
+                            </div>
+                            <div class="log-content" style="flex-grow: 1;">
+                                <div class="log-line-1" style="font-size: 0.9rem; margin-bottom: 4px;">
+                                    <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
+                                    <span>${escapeHtml(safeContent)}</span>
+                                </div>
+                                <div class="log-line-2 comment-text" style="font-size: 0.85rem;">
+                                    ${escapeHtml(safeDate)}
+                                </div>
                             </div>
                         </div>
-                        <div class="comment-text">${escapeHtml(String(content))}</div>
-                    </div>`;
+                        <hr class="comment-hr" />`;
+                }
+
+                // Render COMMENT type
+                return `
+                    <div class="comment-item p-0" style="display: flex; gap: 12px; background: transparent; border: none;">
+                        <div class="comment-avatar" style="flex-shrink: 0;">
+                            <div class="comment-avatar"><i class="bi bi-person"></i></div>
+                        </div>
+                        <div class="comment-content" style="flex-grow: 1;">
+                            <div class="comment-meta" style="font-size: 0.9rem; margin-bottom: 6px;">
+                                <span style="font-weight: 600; color: var(--text-primary);">${escapeHtml(safeAuthor)}</span>
+                                <span style="margin: 0 6px; color: var(--text-secondary);">-</span>
+                                <span style="color: var(--text-secondary);">${escapeHtml(safeDate)}</span>
+                            </div>
+                            <div class="comment-item" style="display: inline-block; background: var(--secondary-bg); padding: 0.65rem; border-radius: 8px; white-space: pre-wrap;">${escapeHtml(safeContent)}</div>
+                        </div>
+                    </div>
+                    <hr class="comment-hr" />`;
             })
             .join('');
 
@@ -1896,13 +2398,16 @@ function initTaskDetailDriSelect2() {
                 $(driSelect).select2('destroy');
             }
 
+            // Populate options first
             driSelect.innerHTML = '<option value="">-- Select DRI --</option>';
-            USERS_CACHE.forEach((user) => {
-                const option = document.createElement('option');
-                option.value = user.idCard || '';
-                option.textContent = formatUserLabel(user);
-                driSelect.appendChild(option);
-            });
+            if (USERS_CACHE && USERS_CACHE.length > 0) {
+                USERS_CACHE.forEach((user) => {
+                    const option = document.createElement('option');
+                    option.value = user.idCard || '';
+                    option.textContent = formatUserLabel(user);
+                    driSelect.appendChild(option);
+                });
+            }
 
             $(driSelect).select2({
                 placeholder: 'Search DRI...',
@@ -1983,10 +2488,100 @@ async function editTaskDetail(taskId, projectId) {
             if (el) el.textContent = value || '';
         };
 
+        // Make task name editable on click
+        const taskNameEl = modalRoot.querySelector('.task-detail-name');
+        if (taskNameEl) {
+            taskNameEl.textContent = task.name || '';
+            taskNameEl.style.cursor = 'pointer';
+            taskNameEl.title = 'Click to edit';
+            taskNameEl.onclick = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                const currentValue = this.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentValue;
+                input.className = 'task-name-edit-input';
+                input.style.cssText = 'width: 100%; font-size: inherit; font-weight: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 0.0625rem solid var(--border-color); outline: none; padding: 4px 8px; border-radius: 4px;';
+                
+                const saveEdit = () => {
+                    this.textContent = input.value || currentValue;
+                    this.style.display = '';
+                    input.remove();
+                };
+                
+                input.onblur = saveEdit;
+                input.onkeydown = (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        saveEdit();
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        this.textContent = currentValue;
+                        this.style.display = '';
+                        input.remove();
+                    }
+                };
+                
+                this.style.display = 'none';
+                this.parentNode.insertBefore(input, this.nextSibling);
+                input.focus();
+                input.select();
+            };
+        }
+
         setText('.task-detail-id', task.taskCode || String(task.id || ''));
-        setText('.task-detail-name', task.name || '');
+
+        // Make description editable on click
         const descEl = modalRoot.querySelector('.section-content');
-        if (descEl) descEl.textContent = task.description || '';
+        if (descEl) {
+            descEl.textContent = task.description || '';
+            descEl.style.cursor = 'pointer';
+            descEl.title = 'Click to edit';
+            descEl.onclick = function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                const currentValue = this.textContent;
+                const textarea = document.createElement('textarea');
+                textarea.value = currentValue;
+                textarea.className = 'task-desc-edit-input';
+                textarea.style.cssText = 'width: 100%; min-height: 100px; font-size: inherit; background: var(--secondary-bg); color: var(--text-primary); border: 0.0625rem solid var(--border-color); outline: none; padding: 8px; border-radius: 4px; resize: vertical;';
+                
+                let isRemoving = false;
+                const saveEdit = () => {
+                    if (isRemoving) return;
+                    isRemoving = true;
+                    this.textContent = textarea.value || currentValue;
+                    this.style.display = '';
+                    if (textarea.parentNode) textarea.remove();
+                };
+                
+                textarea.onblur = saveEdit;
+                textarea.onkeydown = (e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        if (!isRemoving) {
+                            isRemoving = true;
+                            this.textContent = currentValue;
+                            this.style.display = '';
+                            if (textarea.parentNode) textarea.remove();
+                        }
+                    }
+                    // Enter to save, Shift+Enter to new line
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        saveEdit();
+                    }
+                };
+                
+                this.style.display = 'none';
+                this.parentNode.insertBefore(textarea, this.nextSibling);
+                textarea.focus();
+            };
+        }
 
         setText('.date-display', task.dueDate || task.deadline || '-');
         setText('.assignee-name', task.dri || task.assignee || '-');
@@ -2117,15 +2712,32 @@ async function editTaskDetail(taskId, projectId) {
             console.warn('Failed to set status/priority/stage/type selects in task detail modal', e);
         }
 
+        // Wire submit/reject/approve workflow + toggle buttons based on current status
+        try {
+            wireTaskDetailWorkflowActions(modalRoot);
+            const statusVal = getTaskDetailStatusValue(modalRoot) || task.status;
+            updateTaskDetailFooterButtons(modalRoot, statusVal);
+        } catch (e) {
+            console.warn('Failed to initialize task workflow buttons', e);
+        }
+
         loader.unload();
 
         try {
-            const modal = new bootstrap.Modal(modalRoot);
+            const modal = bootstrap.Modal.getOrCreateInstance(modalRoot);
             modal.show();
 
             setTimeout(() => {
                 initDeadlinePicker();
                 initTaskDetailDriSelect2();
+                // Set DRI value after select2 init
+                const driSelect = document.getElementById('dri');
+                if (driSelect && task.dri) {
+                    driSelect.value = task.dri;
+                    if (window.jQuery && $(driSelect).data('select2')) {
+                        $(driSelect).val(task.dri).trigger('change');
+                    }
+                }
             }, 50);
         } catch (e) {
             if (modalRoot) modalRoot.classList.add('active');
@@ -2135,6 +2747,14 @@ async function editTaskDetail(taskId, projectId) {
                 } catch (err) {}
                 try {
                     initTaskDetailDriSelect2();
+                    // Set DRI value after select2 init
+                    const driSelect = document.getElementById('dri');
+                    if (driSelect && task.dri) {
+                        driSelect.value = task.dri;
+                        if (window.jQuery && $(driSelect).data('select2')) {
+                            $(driSelect).val(task.dri).trigger('change');
+                        }
+                    }
                 } catch (err) {}
             }, 50);
         }
@@ -2190,6 +2810,12 @@ async function saveTaskDetailChanges() {
     const driInput = document.getElementById('dri');
     const deadlineInput = document.getElementById('deadLine');
 
+    // Get name and description from modal
+    const taskNameEl = modalRoot.querySelector('.task-detail-name');
+    const descEl = modalRoot.querySelector('.section-content');
+    const newName = taskNameEl ? taskNameEl.textContent.trim() : taskPayload.name;
+    const newDescription = descEl ? descEl.textContent.trim() : taskPayload.description;
+
     let newDri = driInput ? driInput.value : taskPayload.dri;
     let newDeadline = deadlineInput ? deadlineInput.value : taskPayload.dueDate;
     if (newDri === 'N/A' || newDri === '-' || !newDri || newDri.trim() === '') newDri = null;
@@ -2207,6 +2833,8 @@ async function saveTaskDetailChanges() {
     taskPayload.priority = newPriority === 'N/A' ? null : newPriority;
     taskPayload.dri = newDri;
     taskPayload.dueDate = newDeadline;
+    taskPayload.name = newName;
+    taskPayload.description = newDescription;
 
     try {
         const stageSelect = modalRoot.querySelector('#sl-xvt');
@@ -2328,6 +2956,11 @@ async function saveTaskDetailChanges() {
             refreshTaskListRowData(updatedTask);
 
             currentTaskDetailObj = JSON.parse(JSON.stringify(updatedTask));
+
+            // Toggle workflow buttons after status update
+            try {
+                updateTaskDetailFooterButtons(modalRoot, updatedTask.status);
+            } catch (e) {}
 
             await getComments(taskId);
         } catch (e) {
