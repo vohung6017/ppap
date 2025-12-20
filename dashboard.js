@@ -289,7 +289,45 @@ async function showCFT(projectId) {
         const title = document.getElementById('cftTeamTitle');
         const tbody = document.getElementById('cftTeamBody');
 
-        title.textContent = `${projectId} - CFT Team`;
+        // Resolve project name from multiple sources: cache, DOM, or API fallback
+        let projectName = getProjectNameById(projectId);
+        try {
+            if (!projectName || String(projectName) === String(projectId)) {
+                // Try to find project card in DOM
+                try {
+                    const btn = document.querySelector(`[data-action="showCFTTeam"][data-id="${projectId}"]`);
+                    if (btn) {
+                        const card = btn.closest('.project-card');
+                        const nameEl = card ? card.querySelector('.project-name') : null;
+                        if (nameEl && nameEl.textContent && nameEl.textContent.trim()) {
+                            projectName = nameEl.textContent.trim();
+                        }
+                    }
+                } catch (e) {
+                    // ignore DOM lookup errors
+                }
+            }
+
+            // If still not found, try API to fetch project details
+            if (!projectName || String(projectName) === String(projectId)) {
+                try {
+                    const prRes = await fetch(`/sample-system/api/project/${encodeURIComponent(projectId)}`);
+                    if (prRes.ok) {
+                        const prJson = await prRes.json();
+                        const pr = prJson.data || prJson.result || null;
+                        if (pr && (pr.projectName || pr.name)) projectName = pr.projectName || pr.name;
+                        else if (pr && pr.id && pr.id === projectId && pr.name) projectName = pr.name;
+                    }
+                } catch (e) {
+                    // ignore fetch errors
+                }
+            }
+        } catch (e) {
+            console.warn('Failed to resolve project name for CFT modal', e);
+        }
+
+        if (!projectName) projectName = projectId;
+        title.textContent = `${projectName} - CFT TEAM`;
 
         tbody.innerHTML = cftTeamData
             .map((member) => {
@@ -740,10 +778,9 @@ async function showDashboardTasks(filterType) {
     }
 
     try {
-        // Calculate date range: first day of current month to today
+        // Calculate date range
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
+
         function formatDate(d, isEndDate = false) {
             const y = d.getFullYear();
             const m = ('0' + (d.getMonth() + 1)).slice(-2);
@@ -752,8 +789,30 @@ async function showDashboardTasks(filterType) {
             return `${y}/${m}/${day} ${time}`;
         }
 
-        const startTime = formatDate(startOfMonth);
-        const endTime = formatDate(now, true);
+        let startTime;
+        let endTime;
+
+        if (filterType === 'pending') {
+            // For 'pending' filter, use current week: Monday 00:00 to Sunday 23:59
+            // In JS, getDay(): 0 (Sun) .. 6 (Sat). Compute days since Monday.
+            const day = now.getDay();
+            const daysSinceMonday = (day + 6) % 7; // Mon->0, Tue->1, ..., Sun->6
+            const monday = new Date(now);
+            monday.setHours(0, 0, 0, 0);
+            monday.setDate(now.getDate() - daysSinceMonday);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 0);
+
+            startTime = formatDate(monday);
+            endTime = formatDate(sunday, true);
+        } else {
+            // Default: first day of current month to now
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            startTime = formatDate(startOfMonth);
+            endTime = formatDate(now, true);
+        }
 
         // Build API URL
         let url = `/sample-system/api/dashboard/tasks?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
@@ -2719,6 +2778,39 @@ async function editTaskDetail(taskId, projectId) {
             updateTaskDetailFooterButtons(modalRoot, statusVal);
         } catch (e) {
             console.warn('Failed to initialize task workflow buttons', e);
+        }
+
+        // Disable editing for WAITING_FOR_APPROVAL and COMPLETED status
+        try {
+            const normalizedStatus = String(task.status || '').trim().toUpperCase().replace(/\s+/g, '_').replace(/-/g, '_');
+            const isLocked = normalizedStatus === 'WAITING_FOR_APPROVAL' || normalizedStatus === 'COMPLETED';
+            
+            if (isLocked) {
+                const statusSelect = modalRoot.querySelector('#modal-sl-status');
+                const prioritySelect = modalRoot.querySelector('#modal-sl-priority');
+                const driSelect = document.getElementById('dri');
+                const deadlineInput = document.getElementById('deadLine');
+                const stageSelect = modalRoot.querySelector('#sl-xvt');
+                const typeSelect = modalRoot.querySelector('#sl-type');
+                const uploadBtn = document.getElementById('upload');
+                const saveBtn = modalRoot.querySelector('.js-task-save');
+                
+                if (statusSelect) statusSelect.disabled = true;
+                if (prioritySelect) prioritySelect.disabled = true;
+                if (driSelect) {
+                    driSelect.disabled = true;
+                    if (window.jQuery && $(driSelect).data('select2')) {
+                        $(driSelect).prop('disabled', true).trigger('change');
+                    }
+                }
+                if (deadlineInput) deadlineInput.disabled = true;
+                if (stageSelect) stageSelect.disabled = true;
+                if (typeSelect) typeSelect.disabled = true;
+                if (uploadBtn) uploadBtn.disabled = true;
+                if (saveBtn) saveBtn.disabled = true;
+            }
+        } catch (e) {
+            console.warn('Failed to disable controls for locked status', e);
         }
 
         loader.unload();
