@@ -30,6 +30,11 @@ prefix="spring" %>
             </div>
 
             <div class="filter-item">
+                <label class="filter-label plus ml-1 mb-0"><spring:message code="label.model" /></label>
+                <input id="filter-model" class="filter-input" placeholder="<spring:message code='placeholder.model' />"></input>
+            </div>
+
+            <div class="filter-item">
                 <label class="filter-label plus ml-1 mb-0"><spring:message code="label.createdBy" /></label>
                 <select id="filter-created-by" class="filter-input"></select>
             </div>
@@ -48,9 +53,9 @@ prefix="spring" %>
         </div>
         <div class="d-flex justify-content-end">
             <button id="clear_filter_button" type="button" class="btn btn-sm secondary-btn mr-4">
-                <i class="bi bi-x-circle"></i> <spring:message code="button.clear" />
+                <i class="bi bi-arrow-repeat"></i> <spring:message code="reset" />
             </button>
-            <button id="filter_button" type="button" class="btn btn-sm btn-secondary action-btn">
+            <button id="filter_button" type="button" class="action-btn">
                 <i class="bi bi-search"></i> <spring:message code="button.search" />
             </button>
         </div>
@@ -71,8 +76,10 @@ prefix="spring" %>
             <table class="table">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th><spring:message code="customer" /></th>
                         <th><spring:message code="label.projectName" /></th>
+                        <th><spring:message code="label.model" /></th>
                         <th class="pl-3"><spring:message code="status" /></th>
                         <th><spring:message code="label.createdBy" /></th>
                         <th><spring:message code="label.createdAt" /></th>
@@ -140,7 +147,7 @@ prefix="spring" %>
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-                <div class="modal-body" style="min-height: 400px; max-height: 60vh">
+                <div class="modal-body" style="min-height: 31.25rem; height: 60vh; overflow: hidden;">
                     <p style="color: var(--text-secondary); margin-bottom: 20px">
                         <span><spring:message code="modal.selectTaskDesc" /></span>
                     </p>
@@ -164,7 +171,7 @@ prefix="spring" %>
                 <div
                     class="ppap-tasks-grid"
                     id="ppapTasksGrid"
-                    style="overflow-y: auto; max-height: calc(60vh - 120px)">
+                    style="overflow-y: auto; height: calc(60vh - 7.5rem);">
                     <!-- PPAP tasks will be populated here -->
                 </div>
             </div>
@@ -200,7 +207,7 @@ prefix="spring" %>
                     <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-            <div class="modal-body" style="overflow: hidden">
+            <div class="modal-body" style="height: 70vh; overflow: hidden;">
                 <div class="detail-operation-list" style="display: flex; gap: 16px; align-items: flex-start">
                     <div class="detail-block" style="flex: 1; min-width: 220px">
                         <div class="component-title">
@@ -259,7 +266,7 @@ prefix="spring" %>
                     <span class="d-inline-flex" style="gap: 0.3rem"><i class="bi bi-list-task"></i> <spring:message code="modal.tasksListTitle" /> </span>
                     <input id="search-task" class="filter-input" type="text" placeholder="<spring:message code='placeholder.search' />" />
                 </div>
-                <div id="projectTasksContent" style="margin-top: 12px; max-height: 60vh; overflow-y: auto"></div>
+                <div id="projectTasksContent" style="padding-bottom: 8rem; height: calc(70vh - 12rem); overflow-y: auto"></div>
             </div>
             <div class="modal-footer bottom-actions mt-0">
                 <button type="button" class="secondary-btn" data-bs-dismiss="modal">
@@ -268,14 +275,14 @@ prefix="spring" %>
                 </button>
                 <button
                     id="showRaciFromProjectBtn"
-                    class="btn action-btn btn-secondary"
+                    class="action-btn"
                     onclick="showRACIMatrixFromProject()">
                     <i class="bi bi-bar-chart-line"></i> <spring:message code="button.showRaci" />
                 </button>
-                <button class="btn action-btn btn-secondary" onclick="saveProjectTaskQuantity()">
+                <button class="action-btn" onclick="saveProjectTaskQuantity()">
                     <i class="bi bi-floppy"></i> <spring:message code="save" />
                 </button>
-                <button class="btn btn-secondary action-btn" onclick="projectTasksSubmit()">
+                <button class="action-btn" onclick="projectTasksSubmit()">
                     <i class="bi bi-check-circle"></i> <spring:message code="submit" />
                 </button>
             </div>
@@ -386,42 +393,32 @@ prefix="spring" %>
                             <label class="form-label"
                                 ><span><spring:message code="label.sourceCustomer" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="source-customer">
                                 <option value="">Please select</option>
-                                <option value="Apollo">Apollo</option>
-                                <option value="Rhea">Rhea</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.sourceProjectNumber" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="source-project-number">
                                 <option value="">Please select</option>
-                                <option value="FTV-001">FTV-001</option>
-                                <option value="FTV-002">FTV-002</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.sourceXvtStage" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="source-xvt-stage">
                                 <option value="">Please select</option>
-                                <option value="HVT">HVT</option>
-                                <option value="EVT">EVT</option>
-                                <option value="DVT">DVT</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.sourceProcess" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="source-process">
                                 <option value="">Please select</option>
-                                <option value="Design">Design</option>
-                                <option value="Engineering">Engineering</option>
-                                <option value="Verification">Verification</option>
                             </select>
                         </div>
                     </div>
@@ -436,38 +433,32 @@ prefix="spring" %>
                             <label class="form-label"
                                 ><span><spring:message code="label.targetCustomer" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="target-customer">
                                 <option value="">Please select</option>
-                                <option value="Apollo">Apollo</option>
-                                <option value="Rhea">Rhea</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.targetProjectNumber" /></span> <span class="required">*</span></label
                             >
-                            <input type="text" class="form-input" placeholder="<spring:message code='placeholder.exampleProjectNumber' />" />
+                            <select class="form-select" id="target-project-number">
+                                <option value="">Please select</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.targetXvtStage" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="target-xvt-stage">
                                 <option value="">Please select</option>
-                                <option value="HVT">HVT</option>
-                                <option value="EVT">EVT</option>
-                                <option value="DVT">DVT</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label"
                                 ><span><spring:message code="label.targetProcess" /></span> <span class="required">*</span></label
                             >
-                            <select class="form-select">
+                            <select class="form-select" id="target-process">
                                 <option value="">Please select</option>
-                                <option value="Design">Design</option>
-                                <option value="Engineering">Engineering</option>
-                                <option value="Verification">Verification</option>
                             </select>
                         </div>
                     </div>
@@ -478,7 +469,7 @@ prefix="spring" %>
                     <span><i class="bi bi-x-lg"></i></span>
                     <span><spring:message code="cancel" /></span>
                 </button>
-                <button type="button" class="primary-btn">
+                <button type="button" class="primary-btn" onclick="confirmCopyProject()">
                     <span><i class="bi bi-check-lg"></i></span>
                     <span><spring:message code="confirmCopy" /></span>
                 </button>
@@ -633,10 +624,9 @@ prefix="spring" %>
                     <div class="info-section">
                         <div class="section-title">
                             <span><i class="bi bi-chat"></i></span>
-                            <span><spring:message code="discussion" /></span>
+                            <span><spring:message code="actions" /></span>
                         </div>
-                        <div id="comment-container" class="comments-section"></div>
-                        <div class="comment-input">
+                        <div class="comment-input mb-3">
                             <textarea
                                 id="input-comment"
                                 class="comment-textarea"
@@ -647,6 +637,7 @@ prefix="spring" %>
                                 </button>
                             </div>
                         </div>
+                        <div id="comment-container" class="comments-section"></div>
                     </div>
                 </div>
 
@@ -689,9 +680,21 @@ prefix="spring" %>
                     <span><i class="bi bi-door-open"></i></span>
                     <span><spring:message code="close" /></span>
                 </button>
-                <button type="button" class="primary-btn" onclick="saveTaskDetailChanges()">
+                <button type="button" class="secondary-btn js-task-reject d-none">
+                    <span><i class="bi bi-x-circle"></i></span>
+                    <span><spring:message code="reject" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-approve d-none">
+                    <span><i class="bi bi-check-circle"></i></span>
+                    <span><spring:message code="approve" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-save" onclick="saveTaskDetailChanges()">
                     <span><i class="bi bi-floppy"></i></span>
                     <span><spring:message code="saveChanges" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-submit d-none">
+                    <span><i class="bi bi-send"></i></span>
+                    <span><spring:message code="submit" /></span>
                 </button>
             </div>
         </div>
@@ -744,6 +747,12 @@ prefix="spring" %>
                                 <spring:message code="projectName" /> <span class="required">*</span>
                             </label>
                             <input type="text" class="form-input" id="newProjectName" placeholder="<spring:message code='placeholder.exampleProjectNumber' />" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                Product <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-input" id="newProjectProduct" placeholder="Enter Product" />
                         </div>
                     </div>
                 </div>
