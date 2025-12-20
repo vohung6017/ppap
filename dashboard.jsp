@@ -9,15 +9,16 @@ prefix="spring" %>
 </div>
 
 <div class="stats-grid">
-    <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="all">
+    <!-- <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="all"> -->
+    <div class="stat-card clickable" data-filter="all">
         <div class="stat-header">
             <span class="stat-label"><spring:message code="totalProjects" /></span>
             <span class="stat-icon"><i class="bi bi-folder"></i></span>
         </div>
-        <div id="total" class="stat-value">12</div>
-        <div id="last_total" class="stat-change">
-            <i class="bi bi-arrow-up"></i> 2 <spring:message code="fromLastMonth" />
-        </div>
+        <div id="total" class="stat-value"></div>
+        <!-- <div id="last_total" class="stat-change">
+            <i class="bi bi-arrow-up"></i>  <spring:message code="fromLastMonth" />
+        </div> -->
     </div>
 
     <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="in-progress">
@@ -25,10 +26,10 @@ prefix="spring" %>
             <span class="stat-label"><spring:message code="inProgressTasks" /></span>
             <span class="stat-icon"><i class="bi bi-arrow-repeat"></i></span>
         </div>
-        <div id="in_progress" class="stat-value">8</div>
-        <div id="last_in_progress" class="stat-change">
-            <i class="bi bi-arrow-down"></i> 1 <spring:message code="fromLastWeek" />
-        </div>
+        <div id="in_progress" class="stat-value"></div>
+        <!-- <div id="last_in_progress" class="stat-change">
+            <i class="bi bi-arrow-down"></i>  <spring:message code="fromLastWeek" />
+        </div> -->
     </div>
 
     <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="pending">
@@ -36,10 +37,10 @@ prefix="spring" %>
             <span class="stat-label"><spring:message code="weeklyTodo" /></span>
             <span class="stat-icon"><i class="bi bi-hourglass-split"></i></span>
         </div>
-        <div id="pending" class="stat-value">3</div>
-        <div id="last_pending" class="stat-change">
-            <i class="bi bi-arrow-up"></i> 1 <spring:message code="fromYesterday" />
-        </div>
+        <div id="pending" class="stat-value"></div>
+        <!-- <div id="last_pending" class="stat-change">
+            <i class="bi bi-arrow-up"></i>  <spring:message code="fromYesterday" />
+        </div> -->
     </div>
 
     <div class="stat-card clickable" data-action="showDashboardTasks" data-filter="overdue">
@@ -48,7 +49,8 @@ prefix="spring" %>
             <span class="stat-icon"><i class="bi bi-exclamation-triangle"></i></span>
         </div>
         <div id="overdue" class="stat-value">0</div>
-        <div id="last_overdue" class="stat-change"><spring:message code="allOnTrack" /></div>
+        <!-- <div id="last_overdue" class="stat-change"> Tasks</div> -->
+        <!-- <div id="last_overdue" class="stat-change"><spring:message code="allOnTrack" /></div> -->
     </div>
 </div>
 
@@ -138,7 +140,7 @@ prefix="spring" %>
             </div>
             <div class="modal-body" style="overflow: hidden; max-height: 70vh">
                 <div style="max-height: calc(70vh - 40px); overflow-y: auto">
-                    <table class="cft-table">
+                    <table class="cft-table table-fixed">
                         <thead>
                             <tr>
                                 <th><spring:message code="department" /></th>
@@ -171,7 +173,7 @@ prefix="spring" %>
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title" id="taskListModalLabel"><spring:message code="taskListTitle" /></div>
+                <div class="modal-title" id="taskListModalLabel">Tasks List</div>
                 <button type="button" class="btn-close close-btn" data-bs-dismiss="modal" aria-label="Close">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -181,9 +183,9 @@ prefix="spring" %>
                     <table class="table task-list-table">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th><spring:message code="taskID" /></th>
                                 <th><spring:message code="taskName" /></th>
-                                <th><spring:message code="project" /></th>
                                 <th><spring:message code="stage" /></th>
                                 <th><spring:message code="status" /></th>
                                 <th><spring:message code="priority" /></th>
@@ -268,10 +270,9 @@ prefix="spring" %>
                     <div class="info-section">
                         <div class="section-title">
                             <span><i class="bi bi-chat"></i></span>
-                            <span><spring:message code="discussion" /></span>
+                            <span><spring:message code="actions" /></span>
                         </div>
-                        <div id="comment-container" class="comments-section"></div>
-                        <div class="comment-input">
+                        <div class="comment-input mb-3">
                             <textarea
                                 id="input-comment"
                                 class="comment-textarea"
@@ -282,6 +283,7 @@ prefix="spring" %>
                                 </button>
                             </div>
                         </div>
+                        <div id="comment-container" class="comments-section"></div>
                     </div>
                 </div>
 
@@ -324,12 +326,39 @@ prefix="spring" %>
                     <span><i class="bi bi-door-open"></i></span>
                     <span><spring:message code="close" /></span>
                 </button>
-                <button type="button" class="primary-btn" onclick="saveTaskDetailChanges()">
+                <button type="button" class="secondary-btn js-task-reject d-none">
+                    <span><i class="bi bi-x-circle"></i></span>
+                    <span><spring:message code="reject" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-approve d-none">
+                    <span><i class="bi bi-check-circle"></i></span>
+                    <span><spring:message code="approve" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-save" onclick="saveTaskDetailChanges()">
                     <span><i class="bi bi-floppy"></i></span>
                     <span><spring:message code="saveChanges" /></span>
+                </button>
+                <button type="button" class="primary-btn js-task-submit d-none">
+                    <span><i class="bi bi-send"></i></span>
+                    <span><spring:message code="submit" /></span>
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Load i18n messages for JavaScript
+    window.messages = {
+        'project.customer': '<spring:message code="project.customer" />',
+        'project.product': '<spring:message code="project.product" />',
+        'project.xvt': '<spring:message code="project.xvt" />',
+        'project.inprogress': '<spring:message code="project.inprogress" />',
+        'project.pending': '<spring:message code="project.pending" />',
+        'project.overdue': '<spring:message code="project.overdue" />'
+    };
+    window.t = function(key) {
+        return window.messages[key] || key;
+    };
+</script>
 <script src="/sample-system/js/modules/dashboard.js"></script>
