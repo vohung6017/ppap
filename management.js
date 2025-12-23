@@ -338,50 +338,66 @@ function safeHideModal(modalEl) {
         } catch (e2) {}
     }
 
-    try {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach((b) => {
-            if (b && b.parentNode) b.parentNode.removeChild(b);
-        });
-    } catch (e) {}
-
-    try {
-        document.body.classList.remove('modal-open');
-    } catch (e) {}
-    try {
-        document.body.style.paddingRight = '';
-    } catch (e) {}
+    // Wait for modal hide animation to complete
+    setTimeout(() => {
+        try {
+            const openModals = document.querySelectorAll('.modal.show');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            
+            // Only remove backdrops if they exceed the number of open modals
+            if (backdrops.length > openModals.length) {
+                for (let i = openModals.length; i < backdrops.length; i++) {
+                    if (backdrops[i] && backdrops[i].parentNode) {
+                        backdrops[i].parentNode.removeChild(backdrops[i]);
+                    }
+                }
+            }
+            
+            // Only remove body classes if no modals are open
+            if (openModals.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            }
+        } catch (e) {}
+    }, 150);
 }
 
 function cleanUpModal() {
     try {
-        const anyOpen = document.querySelectorAll('.modal.show').length > 0;
+        const openModals = document.querySelectorAll('.modal.show');
+        const anyOpen = openModals.length > 0;
+        
         if (!anyOpen) {
             const backdrops = document.querySelectorAll('.modal-backdrop');
             backdrops.forEach((b) => {
                 try {
-                    b.remove();
+                    if (b && b.parentNode) {
+                        b.parentNode.removeChild(b);
+                    }
                 } catch (e) {
                     /* ignore */
                 }
             });
             try {
                 document.body.classList.remove('modal-open');
-            } catch (e) {}
-            try {
                 document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
             } catch (e) {}
         } else {
             try {
                 const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
-                const openCount = document.querySelectorAll('.modal.show').length;
+                const openCount = openModals.length;
+                
+                // Remove extra backdrops from the end (most recent)
                 if (backdrops.length > openCount) {
-                    const extras = backdrops.slice(0, backdrops.length - openCount);
-                    extras.forEach((b) => {
+                    for (let i = openCount; i < backdrops.length; i++) {
                         try {
-                            b.remove();
+                            if (backdrops[i] && backdrops[i].parentNode) {
+                                backdrops[i].parentNode.removeChild(backdrops[i]);
+                            }
                         } catch (e) {}
-                    });
+                    }
                 }
             } catch (e) {}
         }
@@ -1033,7 +1049,13 @@ async function createProject(customerId, name, model) {
 
     if (!c || !n) return null;
 
-    const payload = {customerId: mapCustomerToId(c), name: n};
+    const now = new Date();
+    const _pad = (v) => String(v).padStart(2, '0');
+    const nowStr = `${now.getFullYear()}/${_pad(now.getMonth() + 1)}/${_pad(now.getDate())} ${_pad(
+        now.getHours()
+    )}:${_pad(now.getMinutes())}:${_pad(now.getSeconds())}`;
+
+    const payload = {customerId: mapCustomerToId(c), name: n, createdAt: nowStr};
     if (normalizedModel) {
         payload.model = normalizedModel;
     }
@@ -1061,9 +1083,7 @@ async function createProject(customerId, name, model) {
                 customer: returned.customerId || c,
                 name: returned.name || n,
                 model: returnedModel,
-                createdDate: returned.createdAt
-                    ? returned.createdAt.split(' ')[0]
-                    : new Date().toISOString().split('T')[0],
+                createdDate: returned.createdAt || nowStr,
                 status: returned.status || 'CREATED',
                 taskCount: 0,
                 tasks: [],
@@ -1299,8 +1319,8 @@ async function loadProjectList() {
                     customer: p.customerId || 'N/A',
                     name: p.name,
                     createdBy: p.createdBy || '',
-                    createdDate: p.createdAt ? p.createdAt.split(' ')[0] : '',
-                    updatedAt: p.updatedAt ? p.updatedAt.split(' ')[0] : '',
+                    createdDate: p.createdAt || '',
+                    updatedAt: p.updatedAt || '',
                     status: p.status || 'N/A',
                     approvedBy: p.approvedBy || '',
                     approvedAt: p.approvedAt || '',
@@ -4146,6 +4166,34 @@ function openModalAbove(modalRef) {
     modalEl.style.zIndex = modalZ;
 
     const bsModal = new bootstrap.Modal(modalEl);
+    
+    // Add event listener to cleanup backdrop when modal is hidden
+    modalEl.addEventListener('hidden.bs.modal', function cleanupBackdrop() {
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            const openModals = document.querySelectorAll('.modal.show');
+            
+            // Remove extra backdrops
+            if (backdrops.length > openModals.length) {
+                for (let i = openModals.length; i < backdrops.length; i++) {
+                    if (backdrops[i] && backdrops[i].parentNode) {
+                        backdrops[i].parentNode.removeChild(backdrops[i]);
+                    }
+                }
+            }
+            
+            // Remove body classes if no modals are open
+            if (openModals.length === 0) {
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            }
+        }, 100);
+        
+        // Remove this event listener after execution
+        modalEl.removeEventListener('hidden.bs.modal', cleanupBackdrop);
+    });
+    
     bsModal.show();
 
     setTimeout(() => {
