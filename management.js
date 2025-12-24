@@ -3171,7 +3171,7 @@ function wireTaskDetailWorkflowActions(modalRoot) {
         }
     };
 
-    const postAction = async (action) => {
+    const postAction = async (action, payload) => {
         const taskId = modalRoot.dataset.taskId;
         if (!taskId) {
             showAlertError('Error', 'Task ID is required');
@@ -3180,10 +3180,22 @@ function wireTaskDetailWorkflowActions(modalRoot) {
 
         try {
             if (typeof loader !== 'undefined' && loader && typeof loader.load === 'function') loader.load();
+            const endpoint = action === 'reject'
+                ? `/sample-system/api/tasks/${encodeURIComponent(taskId)}/reject`
+                : `/sample-system/api/tasks/${encodeURIComponent(taskId)}/${action}`;
 
-            const res = await fetch(`/sample-system/api/tasks/${encodeURIComponent(taskId)}/${action}`, {
+            const fetchOptions = {
                 method: 'POST',
-            });
+            };
+
+            if (payload !== undefined) {
+                fetchOptions.headers = {
+                    'Content-Type': 'application/json',
+                };
+                fetchOptions.body = JSON.stringify(payload);
+            }
+
+            const res = await fetch(endpoint, fetchOptions);
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
                 console.warn(`Task ${action} failed`, res.status, res.statusText, text);
@@ -3252,18 +3264,32 @@ function wireTaskDetailWorkflowActions(modalRoot) {
     if (btnReject) {
         btnReject.addEventListener('click', function () {
             return withDisabled(btnReject, async () => {
+                let reasonPayload;
                 if (window.Swal) {
+                    const modal = document.querySelector('#taskDetailModal');
                     const result = await Swal.fire({
+                        target: modal,
                         title: 'Reject task',
                         text: 'Are you sure you want to reject this task?',
                         icon: 'warning',
+                        input: 'textarea',
+                        inputPlaceholder: 'Enter reject reason',
+                        inputAttributes: {
+                            'aria-label': 'Rejection reason',
+                            maxlength: '1000',
+                        },
                         showCancelButton: true,
                         confirmButtonText: 'Reject',
                         cancelButtonText: 'Cancel',
+                        focusConfirm: false,
                     });
                     if (!result.isConfirmed) return;
+                    const reasonValue = result.value ? String(result.value).trim() : '';
+                    if (reasonValue) {
+                        reasonPayload = { reason: reasonValue };
+                    }
                 }
-                await postAction('reject');
+                await postAction('reject', reasonPayload);
             });
         });
     }
